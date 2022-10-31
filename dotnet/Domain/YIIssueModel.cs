@@ -22,6 +22,7 @@ public struct YTIssueLinkModel
 
 public class YTIssueNetworkModel
 {
+    public SearchOptions Search { get; set; }
     public IEnumerable<YTIssueModel> Issues { get; set; }
     public IEnumerable<YTIssueLinkModel> Links { get; set; }
 }

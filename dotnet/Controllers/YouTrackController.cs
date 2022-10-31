@@ -17,9 +17,9 @@ public class YouTrackController : ControllerBase
     }
 
     [HttpGet("issue-network")]
-    public async Task<YTIssueNetworkModel> GetIssueNetwork()
+    public async Task<YTIssueNetworkModel> GetIssueNetwork([FromQuery] SearchOptions options)
     {
-        var issues = await _client.GetIssueNetwork();
+        var issues = await _client.GetIssueNetwork(options);
         return issues;
     }
 

@@ -13,7 +13,12 @@ export interface IssueModel {
   level: number,
 }
 
+export interface IssueNetworkSearchOptions {
+  project: string[],
+}
+
 export interface IssueNetwork {
+  search: IssueNetworkSearchOptions,
   issues: IssueModel[],
   links: IssueLinkModel[],
 }

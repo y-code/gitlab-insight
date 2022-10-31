@@ -3,22 +3,22 @@ import { Store } from '@ngrx/store';
 import { Subscription, tap } from 'rxjs';
 import { Network, Node, Edge, Options } from 'vis-network';
 import { DataSet } from 'vis-data';
-import { loadIssueNetworkStores } from '../../issue-network-store/issue-network-store.actions';
-import { selectIssueNetworkStoreState } from '../../issue-network-store/issue-network-store.selectors';
-import { IssueModel, IssueNetwork, IssueLinkModel } from '../../issue-network-store/issue-network.model';
+import { loadIssueNetworkStores } from '../issue-network-store/issue-network-store.actions';
+import { selectIssueNetworkStoreState } from '../issue-network-store/issue-network-store.selectors';
+import { IssueModel, IssueNetwork, IssueLinkModel } from '../issue-network-store/issue-network.model';
 
 @Component({
-  selector: 'node-view-issue-network',
-  templateUrl: './issue-network.component.html',
-  styleUrls: ['./issue-network.component.scss'],
+  selector: 'node-view-issue-network-map',
+  templateUrl: './issue-network-map.component.html',
+  styleUrls: ['./issue-network-map.component.scss'],
 })
-export class IssueNetworkComponent implements OnInit, OnDestroy {
+export class IssueNetworkMapComponent implements OnInit, OnDestroy {
 
   @ViewChild('issueNetwork') issueNetwork?: ElementRef<HTMLDivElement>;
 
   subscription?: Subscription;
 
-  data: IssueNetwork = { issues: [], links: [] };
+  data: IssueNetwork = { search: { project: [] }, issues: [], links: [] };
 
   network?: Network;
 
@@ -31,7 +31,7 @@ export class IssueNetworkComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subscription = this.store.select(selectIssueNetworkStoreState).pipe(
       tap(state => {
-        this.data = state.network?.data ?? { issues: [], links: [] };
+        this.data = state.network?.data ?? { search: { project: [] }, issues: [], links: [] };
 
         if (this.issueNetwork?.nativeElement) {
           const nodes = new DataSet<Node>(
@@ -73,8 +73,6 @@ export class IssueNetworkComponent implements OnInit, OnDestroy {
         }
       }),
     ).subscribe();
-
-    this.store.dispatch(loadIssueNetworkStores());
   }
 
   ngOnDestroy(): void {

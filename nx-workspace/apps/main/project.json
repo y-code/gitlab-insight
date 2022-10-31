@@ -15,8 +15,19 @@
         "polyfills": "apps/main/src/polyfills.ts",
         "tsConfig": "apps/main/tsconfig.app.json",
         "inlineStyleLanguage": "scss",
-        "assets": ["apps/main/src/favicon.ico", "apps/main/src/assets"],
-        "styles": ["apps/main/src/styles.scss"],
+        "assets": [
+          "apps/main/src/favicon.ico",
+          "apps/main/src/assets",
+          {
+            "glob": "bootstrap-icons.woff*",
+            "input": "node_modules/bootstrap-icons/font/fonts",
+            "output": "assets/fonts"
+          }
+        ],
+        "styles": [
+          "apps/main/src/styles.scss",
+          "bootstrap-icons/font/bootstrap-icons.scss"
+        ],
         "scripts": []
       },
       "configurations": {

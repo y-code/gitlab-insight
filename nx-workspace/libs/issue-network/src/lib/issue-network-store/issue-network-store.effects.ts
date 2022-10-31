@@ -12,8 +12,8 @@ export class IssueNetworkStoreEffects {
     return this.actions$.pipe( 
 
       ofType(IssueNetworkStoreActions.loadIssueNetworkStores),
-      concatMap(() =>
-        this.service.getIssues$().pipe(
+      concatMap(data =>
+        this.service.getIssues$(data.search).pipe(
           map(data => IssueNetworkStoreActions.loadIssueNetworkStoresSuccess({ data })),
           catchError(error => of(IssueNetworkStoreActions.loadIssueNetworkStoresFailure({ error }))))
       )

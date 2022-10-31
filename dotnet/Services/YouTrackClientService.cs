@@ -77,13 +77,21 @@ public class YouTrackClientService
         }
     }
 
-    public async IAsyncEnumerable<YTIssueModel> GetIssuesAsync()
+    public async IAsyncEnumerable<YTIssueModel> GetIssuesAsync(SearchOptions options)
     {
         var projects = await GetAccessibleProjects();
-        foreach (var project in projects)
+        options.Projects = projects.Select(x => x.ShortName).Intersect(options.Projects).ToArray();
+
+        if (projects.Count() > 0 && options.Projects.Count() == 0)
         {
-            _logger.LogDebug("Project: {Project}", project.Name);
-            var issues = await GetIssuesInProject(project.ShortName);
+            var defaultProjectId = projects.ElementAt(0).ShortName;
+            options.Projects = new[] { defaultProjectId };
+        }
+
+        foreach (var projectId in options.Projects)
+        {
+            _logger.LogDebug("Project: {Project}", projectId);
+            var issues = await GetIssuesInProject(projectId);
             foreach (var issue in issues)
             {
                 _logger.LogDebug("Issue: {Issue}", issue.Summary);
@@ -91,7 +99,7 @@ public class YouTrackClientService
                 yield return new YTIssueModel
                 {
                     Id = issue.Id,
-                    ProjectId = project.ShortName,
+                    ProjectId = projectId,
                     Summary = issue.Summary,
                     Links = links.Select(x => new YTIssueLinkModel
                     {
@@ -110,11 +118,12 @@ public class YouTrackClientService
         "Depend",
     };
 
-    public async Task<YTIssueNetworkModel> GetIssueNetwork()
+    public async Task<YTIssueNetworkModel> GetIssueNetwork(SearchOptions options)
     {
         var network = new YTIssueNetworkModel
         {
-            Issues = await GetIssuesAsync().ToListAsync(),
+            Search = options,
+            Issues = await GetIssuesAsync(options).ToListAsync(),
         };
         network.Links = network.Issues.SelectMany(x => x.Links).Distinct().ToList();
 

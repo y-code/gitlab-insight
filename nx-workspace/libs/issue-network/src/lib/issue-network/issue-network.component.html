@@ -1,0 +1,39 @@
+<node-view-issue-network-map></node-view-issue-network-map>
+
+<div id="menu">
+  <div ngbDropdown class="d-inline-block">
+    <button class="btn btn-outline-dark" id="dropdownBasic1" ngbDropdownToggle>
+      <i class="bi bi-s bi-plus-lg"></i>
+    </button>
+    <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
+      <button ngbDropdownItem (click)="onAddProjectCondition()">Project</button>
+    </div>
+  </div>
+  <span class="badge rounded-pill bg-primary" *ngFor="let condition of  conditions">
+    {{condition.field}}: {{condition.value}}
+    <a (click)="onRemoveProjectCondition(condition.value)">×</a>
+  </span>
+</div>
+
+<ng-template #textConditionDialog let-modal>
+	<div class="modal-header">
+		<h4 class="modal-title" id="modal-basic-title">Add condition</h4>
+		<button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+	</div>
+	<div class="modal-body">
+		<form>
+			<div class="mb-3">
+				<label for="project">Project ID</label>
+				<div class="input-group">
+					<input #text
+						id="project"
+						class="form-control"
+						name="project">
+				</div>
+			</div>
+		</form>
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-outline-dark" (click)="modal.close(text.value)">Add</button>
+	</div>
+</ng-template>

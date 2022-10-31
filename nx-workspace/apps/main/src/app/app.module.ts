@@ -4,9 +4,8 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
-import { IssueNetworkComponent } from './issue-network/issue-network.component';
+import { IssueNetworkComponent, IssueNetworkModule } from '@node-view/issue-network';
 import { NavComponent } from './nav/nav.component';
-import { IssueNetworkStoreModule } from '../issue-network-store/issue-network-store.module';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
@@ -32,15 +31,14 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
         title: 'Issue Network',
       },
     ]),
-    IssueNetworkStoreModule,
     StoreModule.forRoot({}),
     EffectsModule.forRoot(),
     StoreDevtoolsModule.instrument({ name: 'Node View' }),
+    IssueNetworkModule,
   ],
   declarations: [
     AppComponent,
     NxWelcomeComponent,
-    IssueNetworkComponent,
     NavComponent,
   ],
   providers: [],

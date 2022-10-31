@@ -1,8 +1,9 @@
 import { createAction, props } from '@ngrx/store';
-import { IssueNetwork } from './issue-network.model';
+import { IssueNetwork, IssueNetworkSearchOptions } from './issue-network.model';
 
 export const loadIssueNetworkStores = createAction(
-  '[IssueNetworkStore] Load IssueNetworkStores'
+  '[IssueNetworkStore] Load IssueNetworkStores',
+  props<{ search: IssueNetworkSearchOptions }>()
 );
 
 export const loadIssueNetworkStoresSuccess = createAction(
