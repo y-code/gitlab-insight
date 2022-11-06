@@ -11,7 +11,7 @@
   </div>
   <span class="badge rounded-pill bg-primary" *ngFor="let condition of  conditions">
     {{condition.field}}: {{condition.value}}
-    <a (click)="onRemoveProjectCondition(condition.value)">×</a>
+    <a (click)="onRemoveProjectCondition(condition.value)"><i class="bi bi-x-circle-fill"></i></a>
   </span>
 </div>
 
