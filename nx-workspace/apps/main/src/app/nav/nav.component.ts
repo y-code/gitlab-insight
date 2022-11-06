@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'node-view-nav',
+  selector: 'gitlab-insight-nav',
   templateUrl: './nav.component.html',
   styleUrls: ['./nav.component.scss'],
 })

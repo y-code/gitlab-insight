@@ -1,4 +1,4 @@
-namespace NodeView.Domain;
+namespace GitLabInsight.Domain;
 
 public class WeatherForecast
 {

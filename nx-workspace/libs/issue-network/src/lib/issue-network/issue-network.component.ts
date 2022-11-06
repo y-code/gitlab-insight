@@ -7,7 +7,7 @@ import { selectIssueNetworkStoreState } from '../issue-network-store/issue-netwo
 import { IssueNetworkSearchOptions } from '../issue-network-store/issue-network.model';
 
 @Component({
-  selector: 'node-view-issue-network',
+  selector: 'gitlab-insight-issue-network',
   templateUrl: './issue-network.component.html',
   styleUrls: ['./issue-network.component.scss'],
 })

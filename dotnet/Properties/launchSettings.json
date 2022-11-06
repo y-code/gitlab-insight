@@ -1,6 +1,6 @@
 {
   "profiles": {
-    "NodeView": {
+    "GitLabInsight": {
       "commandName": "Project",
       "launchBrowser": true,
       "applicationUrl": "https://localhost:7277;http://localhost:5265",

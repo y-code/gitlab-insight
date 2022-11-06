@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 
 @Component({
-  selector: 'node-view-root',
+  selector: 'gitlab-insight-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
 })

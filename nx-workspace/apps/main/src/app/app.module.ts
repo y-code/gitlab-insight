@@ -4,7 +4,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule } from '@angular/router';
 import { AppComponent } from './app.component';
-import { IssueNetworkComponent, IssueNetworkModule } from '@node-view/issue-network';
+import { IssueNetworkComponent, IssueNetworkModule } from '@gitlab-insight/issue-network';
 import { NavComponent } from './nav/nav.component';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';

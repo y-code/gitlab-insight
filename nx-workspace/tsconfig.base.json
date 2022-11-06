@@ -15,7 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@node-view/issue-network": ["libs/issue-network/src/index.ts"]
+      "@gitlab-insight/issue-network": ["libs/issue-network/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

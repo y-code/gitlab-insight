@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace NodeView.Domain;
+namespace GitLabInsight.Domain;
 
 public class SearchOptions
 {

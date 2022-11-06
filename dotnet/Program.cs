@@ -1,5 +1,5 @@
-using NodeView.Domain;
-using NodeView.Services;
+using GitLabInsight.Domain;
+using GitLabInsight.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,8 +10,8 @@ builder.Logging.AddSerilog();
 builder.Services.AddLogging();
 
 // Add services to the container.
-builder.Services.Configure<NodeViewOptions>(
-    builder.Configuration.GetSection(NodeViewOptions.ConfigSectionName));
+builder.Services.Configure<GitLabInsightOptions>(
+    builder.Configuration.GetSection(GitLabInsightOptions.ConfigSectionName));
 builder.Services.AddSingleton<YouTrackClientService>();
 
 builder.Services.AddControllersWithViews();

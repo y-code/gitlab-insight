@@ -1,23 +1,23 @@
 ﻿using System;
 using System.Linq;
 using Microsoft.Extensions.Options;
-using NodeView.Domain;
+using GitLabInsight.Domain;
 using YouTrackSharp;
 using YouTrackSharp.Issues;
 using YouTrackSharp.Projects;
 
-namespace NodeView.Services;
+namespace GitLabInsight.Services;
 
 public class YouTrackClientService
 {
     private readonly ILogger _logger;
-    private readonly IOptionsMonitor<NodeViewOptions> _options;
+    private readonly IOptionsMonitor<GitLabInsightOptions> _options;
 
     private Connection? _connection;
     private IProjectsService _projectsService;
     private IIssuesService _issuesService;
 
-    public YouTrackClientService(IOptionsMonitor<NodeViewOptions> options, ILogger<YouTrackClientService> logger)
+    public YouTrackClientService(IOptionsMonitor<GitLabInsightOptions> options, ILogger<YouTrackClientService> logger)
     {
         _options = options;
         _logger = logger;

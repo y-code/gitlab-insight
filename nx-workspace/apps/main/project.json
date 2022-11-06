@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/main/src",
-  "prefix": "node-view",
+  "prefix": "gitlab-insight",
   "targets": {
     "build": {
       "executor": "@angular-devkit/build-angular:browser",

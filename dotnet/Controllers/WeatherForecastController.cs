@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using NodeView.Domain;
+using GitLabInsight.Domain;
 
-namespace NodeView.Controllers;
+namespace GitLabInsight.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
