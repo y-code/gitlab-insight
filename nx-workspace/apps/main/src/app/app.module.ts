@@ -9,6 +9,7 @@ import { NavComponent } from './nav/nav.component';
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+import { AppCommonModule } from '@gitlab-insight/app-common';
 
 @NgModule({
   imports: [
@@ -34,6 +35,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
     StoreModule.forRoot({}),
     EffectsModule.forRoot(),
     StoreDevtoolsModule.instrument({ name: 'Node View' }),
+    AppCommonModule,
     IssueNetworkModule,
   ],
   declarations: [

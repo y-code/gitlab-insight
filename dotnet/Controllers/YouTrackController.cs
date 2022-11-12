@@ -23,5 +23,29 @@ public class YouTrackController : ControllerBase
         return issues;
     }
 
+    public enum IssueImportOperation
+    {
+        Start,
+        Cancel,
+    }
+
+    [HttpPost("issue-import")]
+    public async Task ControlIssueImport([FromBody] IssueImportOperation operation)
+    {
+    }
+
+    [HttpGet("issue-import")]
+    public async Task<IEnumerable<YTIssueImportState>> GetIssueImportStates([FromQuery] IEnumerable<Guid> id)
+    {
+        return id.Select(x => new YTIssueImportState
+        {
+            Id = x,
+            Start = DateTimeOffset.UtcNow,
+            End = null,
+            IsInProgress = true,
+            HasError = false,
+            ErrorMessage = null,
+        });
+    }
 }
 

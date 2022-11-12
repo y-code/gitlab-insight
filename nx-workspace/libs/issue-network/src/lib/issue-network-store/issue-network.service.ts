@@ -1,15 +1,19 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
-import { IssueModel, IssueNetwork, IssueNetworkSearchOptions } from "./issue-network.model";
+import { IssueNetwork, IssueNetworkSearchOptions } from "./issue-network.model";
+import { InsightHubClientService } from '@gitlab-insight/insight-hub-client';
 
 @Injectable({
   providedIn: 'root'
 })
 export class IssueNetworkService {
 
+  get hubClient() { return this.hubClientService; }
+
   constructor(
     private httpClient: HttpClient,
+    private hubClientService: InsightHubClientService,
   ) { }
 
   getIssues$(options: IssueNetworkSearchOptions): Observable<IssueNetwork> {

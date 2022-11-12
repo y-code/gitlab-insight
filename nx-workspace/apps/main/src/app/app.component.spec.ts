@@ -1,11 +1,16 @@
 import { TestBed } from '@angular/core/testing';
+import { AppCommonModule } from '@gitlab-insight/app-common';
 import { AppComponent } from './app.component';
 import { NxWelcomeComponent } from './nx-welcome.component';
+import { initialState } from '../../../../libs/issue-network/src/lib/issue-network-store/issue-network-store.reducer';
+import { provideMockIssueNetworkStore } from '../../../../libs/issue-network/src/lib/issue-network-store/issue-network-store.reducer.spec';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
+      imports: [AppCommonModule],
       declarations: [AppComponent, NxWelcomeComponent],
+      providers: [provideMockIssueNetworkStore({ initialState })]
     }).compileComponents();
   });
 
@@ -25,6 +30,6 @@ describe('AppComponent', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Welcome main');
+    expect(compiled.querySelector('footer')?.textContent).toContain('Y-code');
   });
 });

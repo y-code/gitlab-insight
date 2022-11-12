@@ -1,4 +1,17 @@
-import { reducer, initialState } from './issue-network-store.reducer';
+import { Store } from '@ngrx/store';
+import { getMockStore } from '@ngrx/store/testing';
+import { reducer, initialState, IssueNetworkStoreState as IssueNetworkState, issueNetworkStoreFeatureKey } from './issue-network-store.reducer';
+
+export const provideMockIssueNetworkStore =
+  (config: { initialState: IssueNetworkState }) =>
+    ({
+      provide: Store,
+      useValue: getMockStore({
+        initialState: {
+          [issueNetworkStoreFeatureKey]: config.initialState,
+        },
+      }),
+    });
 
 describe('IssueNetworkStore Reducer', () => {
   describe('an unknown action', () => {

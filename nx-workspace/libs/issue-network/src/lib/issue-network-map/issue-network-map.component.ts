@@ -3,7 +3,7 @@ import { Store } from '@ngrx/store';
 import { Subscription, tap } from 'rxjs';
 import { Network, Node, Edge, Options } from 'vis-network';
 import { DataSet } from 'vis-data';
-import { loadIssueNetworkStores } from '../issue-network-store/issue-network-store.actions';
+import { loadIssueNetwork } from '../issue-network-store/issue-network-store.actions';
 import { selectIssueNetworkStoreState } from '../issue-network-store/issue-network-store.selectors';
 import { IssueModel, IssueNetwork, IssueLinkModel } from '../issue-network-store/issue-network.model';
 
@@ -31,7 +31,7 @@ export class IssueNetworkMapComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subscription = this.store.select(selectIssueNetworkStoreState).pipe(
       tap(state => {
-        this.data = state.network?.data ?? { search: { project: [] }, issues: [], links: [] };
+        this.data = state.issueNetwork?.data ?? { search: { project: [] }, issues: [], links: [] };
 
         if (this.issueNetwork?.nativeElement) {
           const nodes = new DataSet<Node>(

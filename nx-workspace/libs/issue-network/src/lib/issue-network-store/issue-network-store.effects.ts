@@ -1,27 +1,49 @@
 import { Injectable } from '@angular/core';
 import { Actions, createEffect, ofType } from '@ngrx/effects';
-import { catchError, map, concatMap } from 'rxjs/operators';
-import { of } from 'rxjs';
-import * as IssueNetworkStoreActions from './issue-network-store.actions';
+import { Store } from '@ngrx/store';
+import { catchError, concatMap, map, of, tap } from 'rxjs';
+import * as _Actions from './issue-network-store.actions';
 import { IssueNetworkService } from './issue-network.service';
 
 @Injectable()
 export class IssueNetworkStoreEffects {
 
-  loadIssueNetworkStores$ = createEffect(() => {
-    return this.actions$.pipe( 
-
-      ofType(IssueNetworkStoreActions.loadIssueNetworkStores),
+  loadIssueNetwork$ = createEffect(() =>
+    this.actions$.pipe( 
+      ofType(_Actions.loadIssueNetwork),
       concatMap(data =>
         this.service.getIssues$(data.search).pipe(
-          map(data => IssueNetworkStoreActions.loadIssueNetworkStoresSuccess({ data })),
-          catchError(error => of(IssueNetworkStoreActions.loadIssueNetworkStoresFailure({ error }))))
+          map(data => _Actions.loadIssueNetworkSuccess({ data })),
+          catchError(error => of(_Actions.loadIssueNetworkFailure({ error }))))
       )
-    );
-  });
+    )
+  );
+
+  connectToInsightHub$ = createEffect(() =>
+    this.actions$.pipe( 
+      ofType(_Actions.connectToInsightHub),
+      concatMap(() => this.service.hubClient.connect$()),
+      map(() => _Actions.reflectInsightHubState({ state: this.service.hubClient.state })),
+      catchError(err => of(_Actions.showMessage({ text: err, isError: true }))),
+    )
+  );
+
+  disconnectToInsightHub$ = createEffect(() =>
+    this.actions$.pipe( 
+      ofType(_Actions.disconnectFromInsightHub),
+      concatMap(() => this.service.hubClient.disconnect$()),
+      map(() => _Actions.reflectInsightHubState({ state: this.service.hubClient.state })),
+      catchError(err => of(_Actions.showMessage({ text: err, isError: true }))),
+    )
+  );
 
   constructor(
     private actions$: Actions,
     private service: IssueNetworkService,
-  ) {}
+    private store: Store,
+  ) {
+    this.service.hubClient.reconnectionState$.pipe(
+      tap(state => this.store.dispatch(_Actions.reflectInsightHubState({ state }))),
+    ).subscribe();
+  }
 }

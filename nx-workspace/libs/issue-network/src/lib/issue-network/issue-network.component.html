@@ -3,7 +3,7 @@
 <div id="menu">
   <div ngbDropdown class="d-inline-block">
     <button class="btn btn-outline-dark" id="dropdownBasic1" ngbDropdownToggle>
-      <i class="bi bi-s bi-plus-lg"></i>
+      <i class="bi bi-s bi-funnel"></i>
     </button>
     <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
       <button ngbDropdownItem (click)="onAddProjectCondition()">Project</button>
@@ -15,9 +15,20 @@
   </span>
 </div>
 
-<ng-template #textConditionDialog let-modal>
+<div id="menu-2">
+  <div ngbDropdown class="d-inline-block">
+    <button class="btn btn-outline-dark" id="dropdownBasic1" ngbDropdownToggle>
+      <i class="bi bi-s bi-tools"></i>
+    </button>
+    <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
+      <button ngbDropdownItem (click)="onIssueImport()">Issue Import</button>
+    </div>
+  </div>
+</div>
+
+<ng-template #projectConditionDialog let-modal>
 	<div class="modal-header">
-		<h4 class="modal-title" id="modal-basic-title">Add condition</h4>
+		<h4 class="modal-title" id="modal-basic-title">Add project condition</h4>
 		<button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
 	</div>
 	<div class="modal-body">
@@ -35,5 +46,19 @@
 	</div>
 	<div class="modal-footer">
 		<button type="button" class="btn btn-outline-dark" (click)="modal.close(text.value)">Add</button>
+	</div>
+</ng-template>
+
+<ng-template #issueImportDialog let-modal>
+	<div class="modal-header">
+		<h4 class="modal-title" id="modal-basic-title">Issue Import</h4>
+		<button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+	</div>
+	<div class="modal-body">
+    Do you want to start importing the issues from the YouTrack database?
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-outline-dark" (click)="modal.close(false)">Cancel</button>
+		<button type="button" class="btn btn-outline-dark" (click)="modal.close(true)">Start</button>
 	</div>
 </ng-template>

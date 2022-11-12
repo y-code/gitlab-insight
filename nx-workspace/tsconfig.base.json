@@ -15,6 +15,10 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@gitlab-insight/app-common": ["libs/app-common/src/index.ts"],
+      "@gitlab-insight/insight-hub-client": [
+        "libs/insight-hub-client/src/index.ts"
+      ],
       "@gitlab-insight/issue-network": ["libs/issue-network/src/index.ts"]
     }
   },
