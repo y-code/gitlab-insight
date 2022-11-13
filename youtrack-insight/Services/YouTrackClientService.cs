@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.Extensions.Options;
 using YouTrackInsight.Domain;
+using YouTrackInsight.Entity;
 using YouTrackSharp;
 using YouTrackSharp.Issues;
 using YouTrackSharp.Projects;
@@ -106,7 +107,7 @@ public class YouTrackClientService
                         Type = x.TypeName,
                         Source = x.Source,
                         Target = x.Target,
-                    }),
+                    }).ToList(),
                 };
             }
         }
@@ -122,7 +123,7 @@ public class YouTrackClientService
     {
         var network = new YTIssueNetworkModel
         {
-            Search = options,
+            Options = options,
             Issues = await GetIssuesAsync(options).ToListAsync(),
         };
         network.Links = network.Issues.SelectMany(x => x.Links).Distinct().ToList();

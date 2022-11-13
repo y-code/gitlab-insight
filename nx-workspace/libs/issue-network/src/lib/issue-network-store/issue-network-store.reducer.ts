@@ -11,10 +11,23 @@ export interface IssuesState {
   error?: any,
 }
 
+export interface IssueImportTask {
+  id: string,
+  start?: Date,
+  end?: Date,
+  isCancelled: boolean,
+  hasError: boolean,
+  message?: string,
+}
+
 export interface IssueImportState {
-  isRequesting?: boolean,
-  importId?: string,
-  error?: unknown
+  isLoading?: boolean,
+  tasks: IssueImportTask[],
+  isSubmitting?: boolean,
+  submittingId?: string,
+  isCancelling?: boolean,
+  cancellingId?: string,
+  error?: unknown,
 }
 
 export interface HubState {
@@ -31,7 +44,7 @@ export interface IssueNetworkStoreState {
   issueNetwork: IssuesState,
   hub: HubState,
   message: MessageState,
-  import: IssueImportState,
+  issueImport: IssueImportState,
 }
 
 export const initialState: IssueNetworkStoreState = {
@@ -42,7 +55,9 @@ export const initialState: IssueNetworkStoreState = {
     state: HubConnectionState.Disconnected,
   },
   message: {},
-  import: {},
+  issueImport: {
+    tasks: [],
+  },
 };
 
 export const reducer = combineReducers({
@@ -106,20 +121,20 @@ export const reducer = combineReducers({
 
   ),
 
-  import: createReducer(
+  issueImport: createReducer(
 
-    initialState.import,
+    initialState.issueImport,
 
     on(_Actions.startIssueImport, (state, action) => ({
-      importId: action.importId,
-      isRequesting: true,
+      ...state,
+      submittingId: action.importId,
+      isSubmitting: true,
     })),
 
-    on(_Actions.startIssueImportSuccess, (state, action) => action.importId === state.importId
+    on(_Actions.startIssueImportSuccess, (state, action) => action.importId === state.submittingId
       ? {
         ...state,
-        importId: action.importId,
-        isRequesting: false,
+        isSubmitting: false,
       }
       : {
         ...state,
@@ -128,7 +143,46 @@ export const reducer = combineReducers({
 
     on(_Actions.startIssueImportFailure, (state, action) => ({
       ...state,
-      isRequesting: false,
+      isSubmitting: false,
+      error: action.error,
+    })),
+
+    on(_Actions.cancelIssueImport, (state, action) => ({
+      ...state,
+      cancellingId: action.importId,
+      isCancelling: true,
+    })),
+
+    on(_Actions.cancelIssueImportSuccess, (state, action) => action.importId === state.cancellingId
+      ? {
+        ...state,
+        isCancelling: false,
+      }
+      : {
+        ...state,
+      }
+    ),
+
+    on(_Actions.cancelIssueImportFailure, (state, action) => ({
+      ...state,
+      isSubmitting: false,
+      error: action.error,
+    })),
+
+    on(_Actions.getIssueImportTasks, (state, action) => ({
+      ...state,
+      isLoading: true,
+    })),
+
+    on(_Actions.getIssueImportTasksSuccess, (state, action) => ({
+      ...state,
+      isLoading: false,
+      tasks: action.tasks,
+    })),
+
+    on(_Actions.getIssueImportTasksFailure, (state, action) => ({
+      ...state,
+      isSubmitting: false,
       error: action.error,
     })),
 
@@ -142,12 +196,17 @@ function assembleError(err: any): any {
   else if (typeof(err) === 'string')
     message += err;
   else {
-    if (!err.message) {}
-    else if (typeof(err.message) === 'string')
-      message += (message?'\n':'') + err.message;
     if (!err.error) {}
     else if (typeof(err.error) === 'string')
       message += (message?'\n':'') + err.error;
+    else {
+      if (!err.error.detail) {}
+      else if (typeof(err.error.detail) === 'string')
+        message += (message?'\n':'') + err.error.detail;
+    }
+    if (!err.message) {}
+    else if (typeof(err.message) === 'string')
+      message += (message?'\n':'') + err.message;
     if (!message)
       return err;
   }

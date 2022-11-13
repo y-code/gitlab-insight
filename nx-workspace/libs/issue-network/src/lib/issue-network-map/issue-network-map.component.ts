@@ -18,7 +18,7 @@ export class IssueNetworkMapComponent implements OnInit, OnDestroy {
 
   subscription?: Subscription;
 
-  data: IssueNetwork = { search: { project: [] }, issues: [], links: [] };
+  data: IssueNetwork = { options: { project: [] }, issues: [], links: [] };
 
   network?: Network;
 
@@ -31,7 +31,7 @@ export class IssueNetworkMapComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.subscription = this.store.select(selectIssueNetworkStoreState).pipe(
       tap(state => {
-        this.data = state.issueNetwork?.data ?? { search: { project: [] }, issues: [], links: [] };
+        this.data = state.issueNetwork?.data ?? { options: { project: [] }, issues: [], links: [] };
 
         if (this.issueNetwork?.nativeElement) {
           const nodes = new DataSet<Node>(

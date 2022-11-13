@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "youtrack-insight", "youtrac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "youtrack-insight-entity", "youtrack-insight-entity\youtrack-insight-entity.csproj", "{AD035F59-54CC-458A-AF0C-ECDCFA731E47}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "youtrack-insight-domain", "youtrack-insight-domain\youtrack-insight-domain.csproj", "{13387E97-5361-4C8E-AA89-989039FF4A5B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,12 @@ Global
 		{AD035F59-54CC-458A-AF0C-ECDCFA731E47}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AD035F59-54CC-458A-AF0C-ECDCFA731E47}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AD035F59-54CC-458A-AF0C-ECDCFA731E47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{13387E97-5361-4C8E-AA89-989039FF4A5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{13387E97-5361-4C8E-AA89-989039FF4A5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{13387E97-5361-4C8E-AA89-989039FF4A5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{13387E97-5361-4C8E-AA89-989039FF4A5B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		BaseDirectory = youtrack-insight-domain
 	EndGlobalSection
 EndGlobal

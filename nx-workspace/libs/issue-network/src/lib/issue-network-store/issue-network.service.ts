@@ -3,6 +3,7 @@ import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { IssueNetwork, IssueNetworkSearchOptions } from "./issue-network.model";
 import { InsightHubClientService } from '@youtrack-insight/insight-hub-client';
+import { IssueImportTask } from "./issue-network-store.reducer";
 
 @Injectable({
   providedIn: 'root'
@@ -25,11 +26,15 @@ export class IssueNetworkService {
     return this.httpClient.get<IssueNetwork>(`/api/YouTrack/issue-network${query}`);
   }
 
+  getIssueImportTasks$(): Observable<IssueImportTask[]> {
+    return this.httpClient.get<IssueImportTask[]>('/api/YouTrack/issue-import');
+  }
+
   startIssueImport$(id: string): Observable<void> {
-    return this.httpClient.post<void>('/api/YouTrack/issue-import', { id, type: 'start' });
+    return this.httpClient.put<void>('/api/YouTrack/issue-import', { id });
   }
 
   cancelIssueImport$(id: string): Observable<void> {
-    return this.httpClient.post<void>('/api/YouTrack/issue-import', { id, type: 'cancel' });
+    return this.httpClient.delete<void>('/api/YouTrack/issue-import', { body: { id } });
   }
 }

@@ -18,7 +18,7 @@ export interface IssueNetworkSearchOptions {
 }
 
 export interface IssueNetwork {
-  search: IssueNetworkSearchOptions,
+  options: IssueNetworkSearchOptions,
   issues: IssueModel[],
   links: IssueLinkModel[],
 }

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using YouTrackInsight.Domain;
+using YouTrackInsight.Entity;
 using YouTrackInsight.Services;
 
 namespace YouTrackInsight.Controllers;
@@ -10,10 +12,12 @@ namespace YouTrackInsight.Controllers;
 public class YouTrackController : ControllerBase
 {
     private readonly YouTrackClientService _client;
+    private readonly YTIssueImportService _issueImportService;
 
-    public YouTrackController(YouTrackClientService client)
+    public YouTrackController(YouTrackClientService client, YTIssueImportService issueImportService)
     {
-        this._client = client;
+        _client = client;
+        _issueImportService = issueImportService;
     }
 
     [HttpGet("issue-network")]
@@ -23,35 +27,54 @@ public class YouTrackController : ControllerBase
         return issues;
     }
 
-    public class IssueImportOperationModel
-    {
-        public enum OperationType
-        {
-            Start,
-            Cancel,
-        }
-
-        public Guid Id { get; set; }
-        public OperationType Type { get; set; }
-    }
-
-    [HttpPost("issue-import")]
-    public async Task ControlIssueImport([FromBody] IssueImportOperationModel operation)
-    {
-    }
-
     [HttpGet("issue-import")]
-    public async Task<IEnumerable<YTIssueImportState>> GetIssueImportStates([FromQuery] IEnumerable<Guid> id)
+    public IAsyncEnumerable<YTIssueImportTask> GetIssueImportTasks([FromQuery] IEnumerable<Guid> id)
+        => _issueImportService.GetTasksInProgress();
+
+    public class SubmitIssueImportRequest
     {
-        return id.Select(x => new YTIssueImportState
+        public Guid Id { get; set; }
+    }
+
+    [HttpPut("issue-import")]
+    public async Task<ActionResult> SubmitIssueImport([FromBody] SubmitIssueImportRequest request, CancellationToken ct)
+    {
+        try
         {
-            Id = x,
-            Start = DateTimeOffset.UtcNow,
-            End = null,
-            IsInProgress = true,
-            HasError = false,
-            ErrorMessage = null,
-        });
+            await _issueImportService.SubmitTaskAsync(request.Id, ct);
+        }
+        catch (ArgumentException e)
+        {
+            return Problem(e.Message, statusCode: (int)HttpStatusCode.BadRequest);
+        }
+        catch (InvalidOperationException e)
+        {
+            return Problem(e.Message);
+        }
+        return Ok();
+    }
+
+    public class CancelIssueImportRequest
+    {
+        public Guid Id { get; set; }
+    }
+
+    [HttpDelete("issue-import")]
+    public async Task<ActionResult> CancelIssueImport([FromBody] CancelIssueImportRequest request, CancellationToken ct)
+    {
+        try
+        {
+            await _issueImportService.CancelTaskAsync(request.Id, ct);
+        }
+        catch (ArgumentException e)
+        {
+            return Problem(e.Message, statusCode: (int)HttpStatusCode.BadRequest);
+        }
+        catch (InvalidOperationException e)
+        {
+            return Problem(e.Message);
+        }
+        return Ok();
     }
 }
 

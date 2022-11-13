@@ -12,7 +12,7 @@ export class IssueNetworkStoreEffects {
     this.actions$.pipe( 
       ofType(_Actions.loadIssueNetwork),
       concatMap(data =>
-        this.service.getIssues$(data.search).pipe(
+        this.service.getIssues$(data.options).pipe(
           map(data => _Actions.loadIssueNetworkSuccess({ data })),
           catchError(error => of(_Actions.loadIssueNetworkFailure({ error }))))
       )
@@ -37,15 +37,64 @@ export class IssueNetworkStoreEffects {
     )
   );
 
-  start$ = createEffect(() =>
+  getIssueImportTasks$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(_Actions.getIssueImportTasks),
+      switchMap(() => this.service.getIssueImportTasks$()),
+      map(tasks => _Actions.getIssueImportTasksSuccess({ tasks })),
+      catchError(error => of(_Actions.getIssueImportTasksFailure({ error }))),
+    )
+  );
+
+  startIssueImport$ = createEffect(() =>
     this.actions$.pipe(
       ofType(_Actions.startIssueImport),
       switchMap(({importId}) =>
         this.service.startIssueImport$(importId).pipe(
-          map(() => _Actions.startIssueImportSuccess({ importId: importId })),
+          map(() => _Actions.startIssueImportSuccess({ importId })),
+          catchError(error => of(_Actions.startIssueImportFailure({ error }))),
         )
       ),
-      catchError(err => of(_Actions.startIssueImportFailure({ error: err }))),
+    )
+  );
+
+  startIssueImportSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(_Actions.startIssueImportSuccess),
+      map(() => _Actions.getIssueImportTasks()),
+    )
+  );
+
+  startIssueImportFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(_Actions.startIssueImportFailure),
+      map(() => _Actions.getIssueImportTasks()),
+    )
+  );
+
+  cancelIssueImport$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(_Actions.cancelIssueImport),
+      switchMap(({importId}) =>
+        this.service.cancelIssueImport$(importId).pipe(
+          map(() => _Actions.cancelIssueImportSuccess({ importId })),
+          catchError(error => of(_Actions.cancelIssueImportFailure({ error }))),
+        )
+      ),
+    )
+  );
+
+  cancelIssueImportSuccess$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(_Actions.cancelIssueImportSuccess),
+      map(() => _Actions.getIssueImportTasks()),
+    )
+  );
+
+  cancelIssueImportFailure$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(_Actions.cancelIssueImportFailure),
+      map(() => _Actions.getIssueImportTasks()),
     )
   );
 

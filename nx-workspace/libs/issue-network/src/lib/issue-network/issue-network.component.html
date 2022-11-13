@@ -22,6 +22,7 @@
     </button>
     <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
       <button ngbDropdownItem (click)="onIssueImport()">Issue Import</button>
+      <button ngbDropdownItem (click)="onIssueImportTasks()">Issue Import Tasks</button>
     </div>
   </div>
 </div>
@@ -60,5 +61,43 @@
 	<div class="modal-footer">
 		<button type="button" class="btn btn-outline-dark" (click)="modal.close(false)">Cancel</button>
 		<button type="button" class="btn btn-outline-dark" (click)="modal.close(true)">Start</button>
+	</div>
+</ng-template>
+
+<ng-template #issueImportTasksDialog let-modal>
+	<div class="modal-header">
+		<h4 class="modal-title" id="modal-basic-title">Issue Import Tasks</h4>
+		<button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
+	</div>
+	<div class="modal-body">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">Task</th>
+          <th scope="col">Start</th>
+          <th scope="col">Status</th>
+          <th scope="col"></th>
+          <th scope="col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let task of importTasks">
+          <td>Issue Import Task</td>
+          <td>{{task.start}}</td>
+          <td><i class="bi bi-s" [ngClass]="{ 'bi-x-octagon-fill': !task.hasError && task.isCancelled, 'bi-x-bug-fill': task.isCancelled}"></i></td>
+          <td>{{task.message}}</td>
+          <td>
+            <button type="button" class="btn btn-outline-dark"
+              (click)="onCancelIssueImportTask(task.id)"
+              [disabled]="!!task.end || task.isCancelled || task.hasError">
+              <i class="bi bi-s bi-sign-stop"></i>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+	</div>
+	<div class="modal-footer">
+		<button type="button" class="btn btn-outline-dark" (click)="modal.close()">Close</button>
 	</div>
 </ng-template>
