@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { AppCommonModule } from '@gitlab-insight/app-common';
+import { AppCommonModule } from '@youtrack-insight/app-common';
 import { AppComponent } from './app.component';
 import { NxWelcomeComponent } from './nx-welcome.component';
 import { initialState } from '../../../../libs/issue-network/src/lib/issue-network-store/issue-network-store.reducer';

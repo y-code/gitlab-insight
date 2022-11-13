@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace GitLabInsight.Domain;
+namespace YouTrackInsight.Domain;
 
 public class YTIssueImportState
 {

@@ -5,12 +5,16 @@ import { ToastService } from "./toast.service";
 @Component({
   selector: 'app-toasts',
   template: `
+
     <ngb-toast
       *ngFor="let toast of toasts; index as index"
       [header]="toast.header||''"
       (hide)="toasts.splice(index, 1)">
-      {{toast.message}}
+      <p *ngFor="let line of toast.message">
+        {{line}}
+      </p>
     </ngb-toast>
+
   `,
   styles: [`
 
@@ -26,14 +30,24 @@ import { ToastService } from "./toast.service";
 })
 export class ToastsComponent {
 
-  toasts: Array<{header?: string, message: string}> = [];
+  toasts: Array<{header?: string, message: string[]}> = [];
 
   constructor(
     private toast: ToastService
   ) {
     this.toast.data.pipe(
       tap(x => {
-        this.toasts = [...this.toasts, x];
+        this.toasts = [
+          ...this.toasts,
+          {
+            ...x,
+            message: !x.message
+              ? []
+              : typeof(x.message) === 'string'
+                ? x.message.split('\n')
+                : [x.message],
+          },
+        ];
       }),
     ).subscribe();
   }

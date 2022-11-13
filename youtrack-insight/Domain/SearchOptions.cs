@@ -2,7 +2,7 @@
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GitLabInsight.Domain;
+namespace YouTrackInsight.Domain;
 
 public class SearchOptions
 {

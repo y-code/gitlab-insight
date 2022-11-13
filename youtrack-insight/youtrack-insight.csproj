@@ -6,7 +6,7 @@
     <IsPackable>false</IsPackable>
     <SpaRoot>..\nx-workspace\</SpaRoot>
     <SpaProxyServerUrl>http://localhost:4200</SpaProxyServerUrl>
-    <RootNamespace>GitLabInsight</RootNamespace>
+    <RootNamespace>YouTrackInsight</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
@@ -30,6 +30,13 @@
     <None Remove="Grpc.AspNetCore.Server.Reflection" />
     <None Remove="Grpc.AspNetCore.Web" />
     <None Remove="Swashbuckle.AspNetCore" />
+    <None Remove="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <None Remove="Npgsql.EntityFrameworkCore.PostgreSQL.Design" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\youtrack-insight-entity\youtrack-insight-entity.csproj">
+      <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
+    </ProjectReference>
   </ItemGroup>
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
     <!-- Ensure Node.js is installed -->

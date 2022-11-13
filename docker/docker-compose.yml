@@ -1,0 +1,24 @@
+version: '3.6'
+
+services:
+  youtrack:
+    image: 'jetbrains/youtrack:2022.2.60273'
+    command: run
+    restart: always
+    ports:
+      - '32080:8080'
+    volumes:
+      - '$YOUTRACK_HOME/data:/opt/youtrack/data'
+      - '$YOUTRACK_HOME/conf:/opt/youtrack/conf'
+      - '$YOUTRACK_HOME/logs:/opt/youtrack/logs'
+      - '$YOUTRACK_HOME/backups:/opt/youtrack/backups'
+
+  postgresql:
+    image: 'apache/age:v1.1.0'
+    ports:
+      - '32432:5432'
+    environment:
+      - POSTGRES_PASSWORD=postgresql
+    volumes:
+      - '$POSTGRES_HOME/data:/var/lib/postgresql/data'
+

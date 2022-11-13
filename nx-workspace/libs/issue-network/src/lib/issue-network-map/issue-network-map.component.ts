@@ -8,7 +8,7 @@ import { selectIssueNetworkStoreState } from '../issue-network-store/issue-netwo
 import { IssueModel, IssueNetwork, IssueLinkModel } from '../issue-network-store/issue-network.model';
 
 @Component({
-  selector: 'gitlab-insight-issue-network-map',
+  selector: 'youtrack-insight-issue-network-map',
   templateUrl: './issue-network-map.component.html',
   styleUrls: ['./issue-network-map.component.scss'],
 })

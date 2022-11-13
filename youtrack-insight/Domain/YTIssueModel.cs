@@ -1,7 +1,7 @@
 ﻿using System;
 using YouTrackSharp.Issues;
 
-namespace GitLabInsight.Domain;
+namespace YouTrackInsight.Domain;
 
 public class YTIssueModel
 {

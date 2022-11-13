@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.AspNetCore.SignalR;
 
-namespace GitLabInsight.Services;
+namespace YouTrackInsight.Services;
 
 public class YouTrackInsightHub : Hub
 {

@@ -21,7 +21,7 @@
           "error",
           {
             "type": "element",
-            "prefix": "gitlab-insight",
+            "prefix": "youtrack-insight",
             "style": "kebab-case"
           }
         ]

@@ -3,7 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "libs/app-common/src",
-  "prefix": "gitlab-insight",
+  "prefix": "youtrack-insight",
   "targets": {
     "test": {
       "executor": "@nrwl/jest:jest",

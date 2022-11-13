@@ -2,7 +2,7 @@ import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
 import { Observable } from "rxjs";
 import { IssueNetwork, IssueNetworkSearchOptions } from "./issue-network.model";
-import { InsightHubClientService } from '@gitlab-insight/insight-hub-client';
+import { InsightHubClientService } from '@youtrack-insight/insight-hub-client';
 
 @Injectable({
   providedIn: 'root'
@@ -23,5 +23,13 @@ export class IssueNetworkService {
       .reduce((p, c) => `${p}&${c}`, '');
     query = (query ? '?' : '') + query;
     return this.httpClient.get<IssueNetwork>(`/api/YouTrack/issue-network${query}`);
+  }
+
+  startIssueImport$(id: string): Observable<void> {
+    return this.httpClient.post<void>('/api/YouTrack/issue-import', { id, type: 'start' });
+  }
+
+  cancelIssueImport$(id: string): Observable<void> {
+    return this.httpClient.post<void>('/api/YouTrack/issue-import', { id, type: 'cancel' });
   }
 }

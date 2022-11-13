@@ -34,3 +34,18 @@ export const showMessage = createAction(
   '[IssueNetworkStore] Show message',
   props<{ text: string, isError?: boolean }>()
 );
+
+export const startIssueImport = createAction(
+  '[IssueNetworkStore] Start Issue Import',
+  props<{ importId: string }>()
+)
+
+export const startIssueImportSuccess = createAction(
+  '[IssueNetworkStore] Start Issue Import Success',
+  props<{ importId: string }>()
+)
+
+export const startIssueImportFailure = createAction(
+  '[IssueNetworkStore] Start Issue Import Failure',
+  props<{ error: any }>()
+)

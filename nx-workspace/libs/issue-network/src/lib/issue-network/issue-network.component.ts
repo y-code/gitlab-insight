@@ -1,14 +1,15 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { HubConnectionState } from '@microsoft/signalr';
-import { ModalDismissReasons, NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Store } from '@ngrx/store';
 import { tap } from 'rxjs';
-import { connectToInsightHub, disconnectFromInsightHub, loadIssueNetwork } from '../issue-network-store/issue-network-store.actions';
+import { connectToInsightHub, disconnectFromInsightHub, loadIssueNetwork, startIssueImport } from '../issue-network-store/issue-network-store.actions';
 import { selectIssueNetworkStoreState } from '../issue-network-store/issue-network-store.selectors';
 import { IssueNetworkSearchOptions } from '../issue-network-store/issue-network.model';
+import { v1 as generateUuid } from 'uuid';
 
 @Component({
-  selector: 'gitlab-insight-issue-network',
+  selector: 'youtrack-insight-issue-network',
   templateUrl: './issue-network.component.html',
   styleUrls: ['./issue-network.component.scss'],
 })
@@ -84,7 +85,7 @@ export class IssueNetworkComponent implements OnInit {
       this.issueImportDialog,
       { ariaLabelledBy: 'modal-basic-title' }
     ).result;
-    // this.store.dispatch()
+    this.store.dispatch(startIssueImport({ importId: generateUuid() }));
   }
 
   onToggleHubConnection() {

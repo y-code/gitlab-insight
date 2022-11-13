@@ -1,9 +1,9 @@
 ﻿using System;
 using Microsoft.AspNetCore.Mvc;
-using GitLabInsight.Domain;
-using GitLabInsight.Services;
+using YouTrackInsight.Domain;
+using YouTrackInsight.Services;
 
-namespace GitLabInsight.Controllers;
+namespace YouTrackInsight.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -23,14 +23,20 @@ public class YouTrackController : ControllerBase
         return issues;
     }
 
-    public enum IssueImportOperation
+    public class IssueImportOperationModel
     {
-        Start,
-        Cancel,
+        public enum OperationType
+        {
+            Start,
+            Cancel,
+        }
+
+        public Guid Id { get; set; }
+        public OperationType Type { get; set; }
     }
 
     [HttpPost("issue-import")]
-    public async Task ControlIssueImport([FromBody] IssueImportOperation operation)
+    public async Task ControlIssueImport([FromBody] IssueImportOperationModel operation)
     {
     }
 

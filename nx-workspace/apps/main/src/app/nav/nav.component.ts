@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'gitlab-insight-nav',
+  selector: 'youtrack-insight-nav',
   templateUrl: './nav.component.html',
   styleUrls: ['./nav.component.scss'],
 })
