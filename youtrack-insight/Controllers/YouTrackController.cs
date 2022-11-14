@@ -29,7 +29,7 @@ public class YouTrackController : ControllerBase
 
     [HttpGet("issue-import")]
     public IAsyncEnumerable<YTIssueImportTask> GetIssueImportTasks([FromQuery] IEnumerable<Guid> id)
-        => _issueImportService.GetTasksInProgress();
+        => _issueImportService.GetTasksInProgressAsync();
 
     public class SubmitIssueImportRequest
     {

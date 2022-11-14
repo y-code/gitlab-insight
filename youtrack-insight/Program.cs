@@ -24,8 +24,9 @@ builder.Services.AddDbContext<YTInsightDbContext>(options =>
 builder.Services.Configure<YouTrackInsightOptions>(
     builder.Configuration.GetSection(YouTrackInsightOptions.ConfigSectionName));
 builder.Services.AddSingleton<YouTrackClientService>();
-builder.Services.AddHostedService<IssueImportManager>();
+builder.Services.AddHostedService<YTIssueImportManager>();
 builder.Services.AddScoped<YTIssueImportService>();
+builder.Services.AddScoped<YTIssueImportWorker>();
 
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>

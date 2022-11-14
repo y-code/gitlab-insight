@@ -13,5 +13,6 @@ public class YouTrackInsightOptions
 }
 
 public class YTIssueImportOptions {
-    public int MaxParallelTasks { get; set; }
+    public int MaxBacklogTasks { get; set; } = 3;
+    public int MaxParallelTasks { get; set; } = 1;
 }

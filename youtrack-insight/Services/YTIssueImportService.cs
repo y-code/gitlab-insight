@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using YouTrackInsight.Entity;
 using YouTrackInsight.Domain;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace YouTrackInsight.Services;
 
@@ -17,10 +18,23 @@ public class YTIssueImportService
         _options = options.Value;
     }
 
-    public IAsyncEnumerable<YTIssueImportTask> GetTasksInProgress()
+    public IAsyncEnumerable<YTIssueImportTask> GetTasksInProgressAsync()
         => _db.IssueImportTasks
             .Where(x => !x.End.HasValue)
             .ToAsyncEnumerable();
+
+    public IAsyncEnumerable<YTIssueImportTask> GetTasksInBacklogAsync()
+        => _db.IssueImportTasks
+            .Where(x => !x.End.HasValue)
+            .OrderBy(x => x.Submitted)
+            .ToAsyncEnumerable();
+
+    public async Task<YTIssueImportTask?> GetTaskAsync(Guid taskId, CancellationToken ct)
+        => (await _db.IssueImportTasks
+            .Where(x => x.Id == taskId)
+            .ToAsyncEnumerable()
+            .ToListAsync(ct))
+            .FirstOrDefault();
 
     public async Task SubmitTaskAsync(Guid id, CancellationToken ct)
     {
@@ -30,18 +44,19 @@ public class YTIssueImportService
         using var tx = await _db.Database.BeginTransactionAsync(ct);
 
         var existingIds = await _db.IssueImportTasks
-            .Where(x => !x.End.HasValue)
+            .Where(x => !x.Start.HasValue)
             .Select(x => x.Id)
             .ToAsyncEnumerable().ToArrayAsync(ct);
 
         if (existingIds.Contains(id)) return;
 
-        if (existingIds.Count() >= _options.IssueImport.MaxParallelTasks)
-            throw new InvalidOperationException($"{existingIds.Count()} tasks has already been in progress. It is not allowed to submit any more task.");
+        if (existingIds.Count() >= _options.IssueImport.MaxBacklogTasks)
+            throw new InvalidOperationException($"{existingIds.Count()} tasks has already been waiting. It is not allowed to submit any more task.");
 
         await _db.AddAsync(new YTIssueImportTask
         {
             Id = id,
+            Submitted = DateTimeOffset.UtcNow,
             Message = "Waiting for the Issue Import task to begin.",
         }, ct);
 
@@ -79,5 +94,48 @@ public class YTIssueImportService
         await _db.SaveChangesAsync(ct);
 
         await _db.Database.CommitTransactionAsync(ct);
+    }
+
+    public async Task UpdateSuccessfulTaskStateAsync(Guid taskId, CancellationToken ct)
+    {
+        using (var tx = await _db.Database.BeginTransactionAsync())
+        {
+            var task = (await _db.IssueImportTasks
+                .Where(x => x.Id == taskId)
+                .ToAsyncEnumerable()
+                .ToListAsync(ct))
+                .FirstOrDefault();
+
+            if (task == null)
+                throw new ArgumentException($"There is no task with ID {taskId}");
+
+            task.End = DateTimeOffset.UtcNow;
+            task.Message = "Issue import has been successfully completed.";
+
+            await _db.SaveChangesAsync(ct);
+            await tx.CommitAsync();
+        }
+    }
+
+    public async Task UpdateFailedTaskStateAsync(Guid taskId, string message, CancellationToken ct)
+    {
+        using (var tx = await _db.Database.BeginTransactionAsync())
+        {
+            var task = (await _db.IssueImportTasks
+                .Where(x => x.Id == taskId)
+                .ToAsyncEnumerable()
+                .ToListAsync(ct))
+                .FirstOrDefault();
+
+            if (task == null)
+                throw new ArgumentException($"There is no task with ID {taskId}");
+
+            task.End = DateTimeOffset.UtcNow;
+            task.HasError = true;
+            task.Message = $"Issue import failed. {message}";
+
+            await _db.SaveChangesAsync(ct);
+            await tx.CommitAsync();
+        }
     }
 }

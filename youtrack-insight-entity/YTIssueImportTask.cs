@@ -8,6 +8,8 @@ public class YTIssueImportTask
 {
     [Column("id")]
     public Guid Id { get; set; }
+    [Column("submitted")]
+    public DateTimeOffset? Submitted { get; set; }
     [Column("start")]
     public DateTimeOffset? Start { get; set; }
     [Column("end")]
