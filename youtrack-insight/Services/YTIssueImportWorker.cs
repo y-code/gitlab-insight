@@ -22,7 +22,7 @@ namespace YouTrackInsight.Services
 
         public async Task RunAsync(Guid taskId, CancellationToken ct)
         {
-
+            await Task.Delay(TimeSpan.FromSeconds(10));
         }
     }
 }

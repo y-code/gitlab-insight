@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { Observable } from "rxjs";
+import { map, Observable } from "rxjs";
 import { IssueNetwork, IssueNetworkSearchOptions } from "./issue-network.model";
 import { InsightHubClientService } from '@youtrack-insight/insight-hub-client';
 import { IssueImportTask } from "./issue-network-store.reducer";
@@ -27,7 +27,13 @@ export class IssueNetworkService {
   }
 
   getIssueImportTasks$(): Observable<IssueImportTask[]> {
-    return this.httpClient.get<IssueImportTask[]>('/api/YouTrack/issue-import');
+    return this.httpClient.get<IssueImportTask[]>('/api/YouTrack/issue-import').pipe(
+      map(x => x.map(y => ({
+        ...y,
+        start: typeof(y.start) === 'string' ? new Date(Date.parse(y.start)) : y.start,
+        end: typeof(y.end) === 'string' ? new Date(Date.parse(y.end)) : y.end,
+      } as IssueImportTask))),
+    );
   }
 
   startIssueImport$(id: string): Observable<void> {

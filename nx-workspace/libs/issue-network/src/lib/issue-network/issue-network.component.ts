@@ -21,7 +21,10 @@ export class IssueNetworkComponent implements OnInit, OnDestroy {
   isHubConnected = false;
   hubConnectionState = HubConnectionState.Disconnected;
   isLoadingImportTasks = false;
-  importTasks: IssueImportTask[] = [];
+  importTasks: (IssueImportTask&{
+    statusIcon: {[key: string]:boolean},
+    formattedDuration: string|undefined
+  })[] = [];
 
   private _subscription?: Subscription;
 
@@ -69,7 +72,11 @@ export class IssueNetworkComponent implements OnInit, OnDestroy {
         tap(issueImport => {
           this.isLoadingImportTasks = !!issueImport.isLoading;
           if (!this.isLoadingImportTasks)
-            this.importTasks = issueImport.tasks;
+            this.importTasks = issueImport.tasks.map(x => ({
+              ...x,
+              statusIcon: this.getImportTaskStateIcon(x),
+              formattedDuration: this.formatImportTaskDuration(x),
+            }));
         }),
       )
     ).subscribe();
@@ -79,6 +86,27 @@ export class IssueNetworkComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
       this._subscription?.unsubscribe();
+  }
+
+  private formatImportTaskDuration(task: IssueImportTask): string|undefined {
+    const duration = task.start
+      ? (task.end?.getTime() ?? Date.now()) - task.start.getTime()
+      : undefined;
+    if (duration === undefined)
+      return undefined;
+    const hours = Math.floor(duration / 1000 / 60 / 60);
+    const minutes = ('' + Math.floor(duration / 1000 / 60)).padStart(2, '0');
+    const seconds = ('' + Math.floor(duration / 1000)).padStart(2, '0');
+    return `${hours}:${minutes}:${seconds}`;
+  }
+
+  private getImportTaskStateIcon(task: IssueImportTask): {[key: string]: boolean} {
+    return {
+      'bi-emoji-smile': !!task.end && !task.isCancelled && !task.hasError,
+      'bi-clock': !!task.start && !task.end && !task.isCancelled && !task.hasError,
+      'bi-x-bug-fill': task.hasError,
+      'bi-emoji-dizzy': task.isCancelled && !task.hasError,
+    }
   }
 
   async onAddProjectCondition(): Promise<void> {
@@ -137,5 +165,4 @@ export class IssueNetworkComponent implements OnInit, OnDestroy {
     else
       this.store.dispatch(connectToInsightHub());
   }
-
 }

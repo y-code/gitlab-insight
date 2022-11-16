@@ -2,8 +2,6 @@
 using Microsoft.Extensions.Options;
 using YouTrackInsight.Entity;
 using YouTrackInsight.Domain;
-using System.Net;
-using System.Threading.Tasks;
 
 namespace YouTrackInsight.Services;
 
@@ -20,7 +18,8 @@ public class YTIssueImportService
 
     public IAsyncEnumerable<YTIssueImportTask> GetTasksInProgressAsync()
         => _db.IssueImportTasks
-            .Where(x => !x.End.HasValue)
+            .OrderByDescending(x => x.Submitted)
+            .Take(_options.IssueImport.MaxBacklogTasks + _options.IssueImport.MaxParallelTasks)
             .ToAsyncEnumerable();
 
     public IAsyncEnumerable<YTIssueImportTask> GetTasksInBacklogAsync()

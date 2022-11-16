@@ -75,6 +75,7 @@
         <tr>
           <th scope="col">Task</th>
           <th scope="col">Start</th>
+          <th scope="col">Duration</th>
           <th scope="col">Status</th>
           <th scope="col"></th>
           <th scope="col"></th>
@@ -83,8 +84,9 @@
       <tbody>
         <tr *ngFor="let task of importTasks">
           <td>Issue Import Task</td>
-          <td>{{task.start}}</td>
-          <td><i class="bi bi-s" [ngClass]="{ 'bi-x-octagon-fill': !task.hasError && task.isCancelled, 'bi-x-bug-fill': task.isCancelled}"></i></td>
+          <td>{{task.start | date : 'short'}}</td>
+          <td>{{task.formattedDuration }}</td>
+          <td><i class="bi bi-s" [ngClass]="task.statusIcon"></i></td>
           <td>{{task.message}}</td>
           <td>
             <button type="button" class="btn btn-outline-dark"

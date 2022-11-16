@@ -93,9 +93,7 @@ namespace YouTrackInsight.Services
                     await tx.CommitAsync();
                 }
 
-                task = worker.RunAsync(taskId, ct);
-
-                await importService.UpdateSuccessfulTaskStateAsync(taskId, ct);
+                task = runAsync(worker, importService);
             }
             catch (Exception e)
             {
@@ -103,6 +101,12 @@ namespace YouTrackInsight.Services
             }
 
             _workerContexts.Add(new WorkerContext(scope, taskId, worker, task));
+
+            async Task runAsync(YTIssueImportWorker worker, YTIssueImportService importService)
+            {
+                await worker.RunAsync(taskId, ct);
+                await importService.UpdateSuccessfulTaskStateAsync(taskId, ct);
+            }
         }
     }
 }
