@@ -1,36 +1,36 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using YouTrackInsight.Domain;
 using YouTrackInsight.Entity;
-using Microsoft.Extensions.DependencyInjection;
 
-namespace YouTrackInsight.Services
+namespace YouTrackInsight.Services;
+public class YTIssueImportManager : BackgroundService
 {
-    public class YTIssueImportManager : BackgroundService
+    private record WorkerContext(
+        IServiceScope Scope,
+        Guid ImportTaskId,
+        YTIssueImportWorker Worker,
+        Task? Task);
+
+    private readonly IServiceProvider _serviceProvider;
+    private readonly YouTrackInsightOptions _options;
+
+    private List<WorkerContext> _workerContexts = new();
+
+    public YTIssueImportManager(
+        IServiceProvider serviceProvider,
+        IOptions<YouTrackInsightOptions> options)
     {
-        private record WorkerContext(
-            IServiceScope Scope,
-            Guid ImportTaskId,
-            YTIssueImportWorker Worker,
-            Task? Task);
+        _serviceProvider = serviceProvider;
+        _options = options.Value;
+    }
 
-        private readonly IServiceProvider _serviceProvider;
-        private readonly YouTrackInsightOptions _options;
-
-        private List<WorkerContext> _workerContexts = new();
-
-        public YTIssueImportManager(
-            IServiceProvider serviceProvider,
-            IOptions<YouTrackInsightOptions> options)
+    protected override async Task ExecuteAsync(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
         {
-            _serviceProvider = serviceProvider;
-            _options = options.Value;
-        }
+            await Task.Delay(TimeSpan.FromSeconds(2));
 
-        protected override async Task ExecuteAsync(CancellationToken ct)
-        {
-            while (!ct.IsCancellationRequested)
+            lock (_workerContexts)
             {
                 foreach (var workerContext in _workerContexts.ToArray())
                 {
@@ -42,72 +42,73 @@ namespace YouTrackInsight.Services
                 }
 
                 if (_workerContexts.Count >= _options.IssueImport.MaxParallelTasks)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(5));
-                }
-
-                using (var scope = _serviceProvider.CreateScope())
-                {
-                    var importService = scope.ServiceProvider.GetRequiredService<YTIssueImportService>();
-                    var tasks = importService.GetTasksInBacklogAsync();
-
-                    await foreach (var importTask in tasks)
-                    {
-                        if (ct.IsCancellationRequested)
-                            return;
-                        if (_workerContexts.Count >= _options.IssueImport.MaxParallelTasks) // TODO: check with the table in DB
-                            break;
-
-                        await StartWorderAsync(importTask.Id, ct);
-                    }
-                }
-
-                await Task.Delay(TimeSpan.FromSeconds(5));
-            }
-        }
-
-        public async Task StartWorderAsync(Guid taskId, CancellationToken ct)
-        {
-            var scope = _serviceProvider.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<YTInsightDbContext>();
-
-            var importService = scope.ServiceProvider.GetRequiredService<YTIssueImportService>();
-
-            var worker = scope.ServiceProvider.GetRequiredService<YTIssueImportWorker>();
-
-            Task? task = null;
-
-            try
-            {
-                using (var tx = await db.Database.BeginTransactionAsync())
-                {
-                    var importTask = await importService.GetTaskAsync(taskId, ct);
-
-                    if (importTask == null)
-                        throw new ArgumentException($"There is no task with ID {taskId}");
-
-                    importTask.Start = DateTimeOffset.UtcNow;
-                    importTask.Message = "Issue import is in progress.";
-
-                    await db.SaveChangesAsync(ct);
-                    await tx.CommitAsync();
-                }
-
-                task = runAsync(worker, importService);
-            }
-            catch (Exception e)
-            {
-                await importService.UpdateFailedTaskStateAsync(taskId, e.Message, ct);
+                    continue;
             }
 
-            _workerContexts.Add(new WorkerContext(scope, taskId, worker, task));
-
-            async Task runAsync(YTIssueImportWorker worker, YTIssueImportService importService)
+            using (var scope = _serviceProvider.CreateScope())
             {
-                await worker.RunAsync(taskId, ct);
-                await importService.UpdateSuccessfulTaskStateAsync(taskId, ct);
+                var importService = scope.ServiceProvider.GetRequiredService<YTIssueImportService>();
+                var tasks = importService.GetTasksInBacklogAsync();
+
+                await foreach (var importTask in tasks)
+                {
+                    if (ct.IsCancellationRequested)
+                        return;
+                    if (_workerContexts.Count >= _options.IssueImport.MaxParallelTasks) // TODO: check with the table in DB
+                        break;
+
+                    await StartWorderAsync(importTask.Id, ct);
+                }
             }
         }
     }
-}
 
+    public async Task StartWorderAsync(Guid taskId, CancellationToken ct)
+    {
+        var scope = _serviceProvider.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<YTInsightDbContext>();
+
+        var importService = scope.ServiceProvider.GetRequiredService<YTIssueImportService>();
+        var hubClients = scope.ServiceProvider.GetRequiredService<YouTrackInsightHubClients>();
+
+        var worker = scope.ServiceProvider.GetRequiredService<YTIssueImportWorker>();
+
+        Task? task = null;
+
+        try
+        {
+            using (var tx = await db.Database.BeginTransactionAsync())
+            {
+                var importTask = await importService.GetTaskAsync(taskId, ct);
+
+                if (importTask == null)
+                    throw new ArgumentException($"There is no task with ID {taskId}");
+
+                importTask.Start = DateTimeOffset.UtcNow;
+                importTask.Message = "Issue import is in progress.";
+
+                await db.SaveChangesAsync(ct);
+                await tx.CommitAsync();
+            }
+
+            await hubClients.NotifyIssueImportTaskUpdatedAsync(taskId, ct);
+
+            task = runAsync(worker, importService);
+        }
+        catch (Exception e)
+        {
+            await importService.UpdateFailedTaskStateAsync(taskId, e.Message, ct);
+        }
+
+        _workerContexts.Add(new WorkerContext(scope, taskId, worker, task));
+
+        async Task runAsync(YTIssueImportWorker worker, YTIssueImportService importService)
+        {
+            await worker.RunAsync(taskId, ct);
+
+            await importService.UpdateSuccessfulTaskStateAsync(taskId, ct);
+
+            await hubClients.NotifyIssueImportTaskUpdatedAsync(taskId, ct);
+        }
+    }
+}

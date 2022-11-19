@@ -18,24 +18,6 @@ export const loadIssueNetworkFailure = createAction(
   props<{ error: any }>()
 );
 
-export const connectToInsightHub = createAction(
-  '[IssueNetworkStore] Connect to Insight Hub'
-);
-
-export const disconnectFromInsightHub = createAction(
-  '[IssueNetworkStore] Disconnect from Insight Hub'
-);
-
-export const reflectInsightHubState = createAction(
-  '[IssueNetworkStore] Reflect Insight Hub state',
-  props<{ state: HubConnectionState }>()
-);
-
-export const showMessage = createAction(
-  '[IssueNetworkStore] Show message',
-  props<{ text: string, isError?: boolean }>()
-);
-
 export const startIssueImport = createAction(
   '[IssueNetworkStore] Start Issue Import',
   props<{ importId: string }>()

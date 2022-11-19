@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HubConnection, HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr';
-import { concat, from, Observable, of, Subject } from 'rxjs';
+import { createSelector, Store } from '@ngrx/store';
+import { concat, filter, first, from, Observable, of, Subject } from 'rxjs';
+import { connectToHubFailure, connectToHubSuccess, onIssueImportTaskUpdated } from './insight-hub-store/insight-hub-store.actions';
+import { selectInsightHubStoreState } from './insight-hub-store/insight-hub-store.selectors';
 
 @Injectable({
   providedIn: 'root',
@@ -13,29 +16,38 @@ export class InsightHubClientService {
 
   get state() { return this.connection.state; }
 
-  private reconnectionState = new Subject<HubConnectionState>();
-  get reconnectionState$() { return this.reconnectionState.asObservable(); }
+  readonly firstConnected$
+    = this.store.select(createSelector(selectInsightHubStoreState, x => x.connection))
+      .pipe(
+        filter(x => x.state === HubConnectionState.Connected),
+        first(),
+      );
 
-  constructor() {
+  constructor(
+    private store: Store,
+  ) {
     this.connection = new HubConnectionBuilder()
       .withUrl(InsightHubClientService.hubUrl)
       .configureLogging(LogLevel.Debug)
       .withAutomaticReconnect()
       .build();
 
-    this.connection.onreconnecting(err => {
-      if (err)
-        this.reconnectionState.error(err);
+    this.connection.onreconnecting(error => {
+      if (error)
+        this.store.dispatch(connectToHubFailure({ error }))
       else
-        this.reconnectionState.next(this.connection.state);
+        this.store.dispatch(connectToHubSuccess({ state: this.connection.state }));
     });
 
-    this.connection.onreconnected(err => {
-      if (err)
-        this.reconnectionState.error(err);
+    this.connection.onreconnected(error => {
+      if (error)
+        this.store.dispatch(connectToHubFailure({ error }))
       else
-        this.reconnectionState.next(this.connection.state);
+        this.store.dispatch(connectToHubSuccess({ state: this.connection.state }));
     })
+
+    this.connection.on('OnIssueImportTaskUpdated', (taskId: string) =>
+      this.store.dispatch(onIssueImportTaskUpdated({ taskId })));
   }
 
   connect$(): Observable<void> {
@@ -65,4 +77,11 @@ export class InsightHubClientService {
     }
   }
 
+  subscribeToIssueImport$(): Observable<void> {
+    return from(this.connection.send('SubscribeToIssueImport'));
+  }
+
+  unsubscribeToIssueImport$(): Observable<void> {
+    return from(this.connection.send('UnsubscribeToIssueImport'));
+  }
 }

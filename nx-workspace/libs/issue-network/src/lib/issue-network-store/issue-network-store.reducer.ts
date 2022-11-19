@@ -30,20 +30,8 @@ export interface IssueImportState {
   error?: unknown,
 }
 
-export interface HubState {
-  state: HubConnectionState,
-  operationStart?: Date,
-}
-
-export interface MessageState {
-  text?: string,
-  isError?: boolean,
-}
-
 export interface IssueNetworkStoreState {
   issueNetwork: IssuesState,
-  hub: HubState,
-  message: MessageState,
   issueImport: IssueImportState,
 }
 
@@ -51,10 +39,6 @@ export const initialState: IssueNetworkStoreState = {
   issueNetwork: {
     isLoading: false,
   },
-  hub: {
-    state: HubConnectionState.Disconnected,
-  },
-  message: {},
   issueImport: {
     tasks: [],
   },
@@ -78,45 +62,6 @@ export const reducer = combineReducers({
       ...state,
       isLoading: false,
       error: action.error,
-    })),
-
-  ),
-
-  hub: createReducer(
-
-    initialState.hub,
-
-    on(_Actions.connectToInsightHub, state => ({
-      ...state,
-      operationStart: new Date(),
-    })),
-    on(_Actions.disconnectFromInsightHub, state => ({
-      ...state,
-      operationStart: new Date(),
-    })),
-    on(_Actions.reflectInsightHubState, (state, action) => ({
-      state: action.state,
-    })),
-
-  ),
-
-  message: createReducer(
-
-    initialState.message,
-
-    on(_Actions.reflectInsightHubState, (state, action) => ({
-      text: `${action.state} to Insight Hub`,
-    })),
-
-    on(_Actions.showMessage, (state, action) => ({
-      text: assembleError(action.text),
-      isError: action.isError,
-    })),
-
-
-    on(_Actions.startIssueImportFailure, (state, action) => ({
-      text: assembleError(action.error),
-      isError: true,
     })),
 
   ),
@@ -189,26 +134,3 @@ export const reducer = combineReducers({
   )
 
 });
-
-function assembleError(err: any): any {
-  let message = '';
-  if (!err) {}
-  else if (typeof(err) === 'string')
-    message += err;
-  else {
-    if (!err.error) {}
-    else if (typeof(err.error) === 'string')
-      message += (message?'\n':'') + err.error;
-    else {
-      if (!err.error.detail) {}
-      else if (typeof(err.error.detail) === 'string')
-        message += (message?'\n':'') + err.error.detail;
-    }
-    if (!err.message) {}
-    else if (typeof(err.message) === 'string')
-      message += (message?'\n':'') + err.message;
-    if (!message)
-      return err;
-  }
-  return message;
-}

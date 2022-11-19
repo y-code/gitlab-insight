@@ -21,8 +21,7 @@
       <i class="bi bi-s bi-tools"></i>
     </button>
     <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
-      <button ngbDropdownItem (click)="onIssueImport()">Issue Import</button>
-      <button ngbDropdownItem (click)="onIssueImportTasks()">Issue Import Tasks</button>
+      <button ngbDropdownItem (click)="onIssueImportTasks()">Issue Import</button>
     </div>
   </div>
 </div>
@@ -66,10 +65,13 @@
 
 <ng-template #issueImportTasksDialog let-modal>
 	<div class="modal-header">
-		<h4 class="modal-title" id="modal-basic-title">Issue Import Tasks</h4>
+		<h4 class="modal-title" id="modal-basic-title">Issue Import</h4>
 		<button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
 	</div>
 	<div class="modal-body">
+    <div>
+      <button type="button" class="btn btn-outline-dark" (click)="onIssueImport()">Import issues</button>
+    </div>
     <table class="table table-striped">
       <thead>
         <tr>
@@ -85,7 +87,7 @@
         <tr *ngFor="let task of importTasks">
           <td>Issue Import Task</td>
           <td>{{task.start | date : 'short'}}</td>
-          <td>{{task.formattedDuration }}</td>
+          <td>{{task.formattedDuration | async}}</td>
           <td><i class="bi bi-s" [ngClass]="task.statusIcon"></i></td>
           <td>{{task.message}}</td>
           <td>

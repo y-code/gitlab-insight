@@ -2,8 +2,9 @@ import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/co
 import { HubConnectionState } from '@microsoft/signalr';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { createSelector, Store } from '@ngrx/store';
-import { merge, Subscription, tap } from 'rxjs';
-import { cancelIssueImport, connectToInsightHub, disconnectFromInsightHub, getIssueImportTasks, loadIssueNetwork, startIssueImport } from '../issue-network-store/issue-network-store.actions';
+import { map, merge, Observable, Subscription, tap, timer } from 'rxjs';
+import { selectInsightHubStoreState, subscribeToIssueImport } from '@youtrack-insight/insight-hub-client';
+import { cancelIssueImport, getIssueImportTasks, loadIssueNetwork, startIssueImport } from '../issue-network-store/issue-network-store.actions';
 import { selectIssueNetworkStoreState } from '../issue-network-store/issue-network-store.selectors';
 import { IssueNetworkSearchOptions } from '../issue-network-store/issue-network.model';
 import { v1 as generateUuid } from 'uuid';
@@ -23,7 +24,7 @@ export class IssueNetworkComponent implements OnInit, OnDestroy {
   isLoadingImportTasks = false;
   importTasks: (IssueImportTask&{
     statusIcon: {[key: string]:boolean},
-    formattedDuration: string|undefined
+    formattedDuration: Observable<string|undefined>,
   })[] = [];
 
   private _subscription?: Subscription;
@@ -54,10 +55,10 @@ export class IssueNetworkComponent implements OnInit, OnDestroy {
         }),
       ),
 
-      this.store.select(createSelector(selectIssueNetworkStoreState, x => x.hub)).pipe(
-        tap(hub => {
-          this.hubConnectionState = hub.state;
-          switch (hub.state) {
+      this.store.select(createSelector(selectInsightHubStoreState, x => x.connection)).pipe(
+        tap(connection => {
+          this.hubConnectionState = connection.state;
+          switch (connection.state) {
             case HubConnectionState.Connected:
               this.isHubConnected = true;
               break;
@@ -75,12 +76,15 @@ export class IssueNetworkComponent implements OnInit, OnDestroy {
             this.importTasks = issueImport.tasks.map(x => ({
               ...x,
               statusIcon: this.getImportTaskStateIcon(x),
-              formattedDuration: this.formatImportTaskDuration(x),
+              formattedDuration: timer(0, 1000).pipe(
+                map(() => this.formatImportTaskDuration(x)),
+              ),
             }));
         }),
       )
     ).subscribe();
 
+    this.store.dispatch(subscribeToIssueImport());
     this.store.dispatch(loadIssueNetwork({ options: { project: [] } }));
   }
 
@@ -104,8 +108,8 @@ export class IssueNetworkComponent implements OnInit, OnDestroy {
     return {
       'bi-emoji-smile': !!task.end && !task.isCancelled && !task.hasError,
       'bi-clock': !!task.start && !task.end && !task.isCancelled && !task.hasError,
-      'bi-x-bug-fill': task.hasError,
-      'bi-emoji-dizzy': task.isCancelled && !task.hasError,
+      'bi-emoji-dizzy': task.hasError,
+      'bi-emoji-expressionless': task.isCancelled && !task.hasError,
     }
   }
 
@@ -157,12 +161,5 @@ export class IssueNetworkComponent implements OnInit, OnDestroy {
 
   onCancelIssueImportTask(importId: string) {
     this.store.dispatch(cancelIssueImport({ importId }));
-  }
-
-  onToggleHubConnection() {
-    if (this.isHubConnected)
-      this.store.dispatch(disconnectFromInsightHub());
-    else
-      this.store.dispatch(connectToInsightHub());
   }
 }

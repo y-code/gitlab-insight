@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using YouTrackInsight.Domain;
 using YouTrackInsight.Entity;
 using YouTrackSharp;

@@ -1,5 +1,4 @@
-﻿using System;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using YouTrackInsight.Entity;
 using YouTrackInsight.Domain;
 
@@ -10,23 +9,27 @@ public class YTIssueImportService
     private readonly YTInsightDbContext _db;
     private readonly YouTrackInsightOptions _options;
 
-    public YTIssueImportService(YTInsightDbContext db, IOptions<YouTrackInsightOptions> options)
+    public YTIssueImportService(
+        YTInsightDbContext db,
+        IOptions<YouTrackInsightOptions> options)
     {
         _db = db;
         _options = options.Value;
     }
 
-    public IAsyncEnumerable<YTIssueImportTask> GetTasksInProgressAsync()
+    public IAsyncEnumerable<YTIssueImportTask> GetTasksAsync()
         => _db.IssueImportTasks
             .OrderByDescending(x => x.Submitted)
             .Take(_options.IssueImport.MaxBacklogTasks + _options.IssueImport.MaxParallelTasks)
             .ToAsyncEnumerable();
 
-    public IAsyncEnumerable<YTIssueImportTask> GetTasksInBacklogAsync()
+    public IQueryable<YTIssueImportTask> TasksInBacklog
         => _db.IssueImportTasks
-            .Where(x => !x.End.HasValue)
-            .OrderBy(x => x.Submitted)
-            .ToAsyncEnumerable();
+            .Where(x => !x.Start.HasValue)
+            .OrderBy(x => x.Submitted);
+
+    public IAsyncEnumerable<YTIssueImportTask> GetTasksInBacklogAsync()
+        => TasksInBacklog.ToAsyncEnumerable();
 
     public async Task<YTIssueImportTask?> GetTaskAsync(Guid taskId, CancellationToken ct)
         => (await _db.IssueImportTasks
@@ -42,9 +45,7 @@ public class YTIssueImportService
 
         using var tx = await _db.Database.BeginTransactionAsync(ct);
 
-        var existingIds = await _db.IssueImportTasks
-            .Where(x => !x.Start.HasValue)
-            .Select(x => x.Id)
+        var existingIds = await TasksInBacklog.Select(x => x.Id)
             .ToAsyncEnumerable().ToArrayAsync(ct);
 
         if (existingIds.Contains(id)) return;
@@ -88,6 +89,7 @@ public class YTIssueImportService
 
         task.IsCancelled = true;
         task.End = DateTimeOffset.UtcNow;
+        task.Start ??= task.End;
         task.Message = "The task is cancelled by a user request.";
 
         await _db.SaveChangesAsync(ct);

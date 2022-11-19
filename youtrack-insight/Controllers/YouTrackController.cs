@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using YouTrackInsight.Domain;
 using YouTrackInsight.Entity;
 using YouTrackInsight.Services;
@@ -13,11 +14,16 @@ public class YouTrackController : ControllerBase
 {
     private readonly YouTrackClientService _client;
     private readonly YTIssueImportService _issueImportService;
+    private readonly YouTrackInsightHubClients _hubClients;
 
-    public YouTrackController(YouTrackClientService client, YTIssueImportService issueImportService)
+    public YouTrackController(
+        YouTrackClientService client,
+        YTIssueImportService issueImportService,
+        YouTrackInsightHubClients hubClients)
     {
         _client = client;
         _issueImportService = issueImportService;
+        _hubClients = hubClients;
     }
 
     [HttpGet("issue-network")]
@@ -29,7 +35,7 @@ public class YouTrackController : ControllerBase
 
     [HttpGet("issue-import")]
     public IAsyncEnumerable<YTIssueImportTask> GetIssueImportTasks([FromQuery] IEnumerable<Guid> id)
-        => _issueImportService.GetTasksInProgressAsync();
+        => _issueImportService.GetTasksAsync();
 
     public class SubmitIssueImportRequest
     {
@@ -51,6 +57,9 @@ public class YouTrackController : ControllerBase
         {
             return Problem(e.Message);
         }
+
+        await _hubClients.NotifyIssueImportTaskUpdatedAsync(request.Id, ct);
+
         return Ok();
     }
 
@@ -74,6 +83,9 @@ public class YouTrackController : ControllerBase
         {
             return Problem(e.Message);
         }
+
+        await _hubClients.NotifyIssueImportTaskUpdatedAsync(request.Id, ct);
+
         return Ok();
     }
 }
