@@ -1,10 +1,9 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace YouTrackInsight.Entity;
+namespace Bakfoo.Entity;
 
-[Table("issue_import_task")]
-public class YTIssueImportTask
+[Table("job", Schema = "bakfoo")]
+public class BakfooJob
 {
     [Column("id")]
     public Guid Id { get; set; }
@@ -14,6 +13,10 @@ public class YTIssueImportTask
     public DateTimeOffset? Start { get; set; }
     [Column("end")]
     public DateTimeOffset? End { get; set; }
+    [Column("is_cancelling")]
+    public bool IsCancelling { get; set; }
+    [Column("cancel_requested")]
+    public DateTimeOffset? CancelRequested { get; set; }
     [Column("is_cancelled")]
     public bool IsCancelled { get; set; }
     [Column("has_error")]

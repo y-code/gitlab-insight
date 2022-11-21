@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>YouTrackInsight.Domain</RootNamespace>
+    <AssemblyName>YouTrackInsight.Domain</AssemblyName>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>flase</IsPackable>
@@ -10,6 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\youtrack-insight-entity\youtrack-insight-entity.csproj" />
+    <ProjectReference Include="..\YouTrackInsight.Entity\YouTrackInsight.Entity.csproj">
+      <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
+    </ProjectReference>
   </ItemGroup>
 </Project>

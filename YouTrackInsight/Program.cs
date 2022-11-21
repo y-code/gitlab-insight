@@ -1,11 +1,11 @@
 using System.Text.Json.Serialization;
 using YouTrackInsight.Domain;
 using YouTrackInsight.Services;
-using Microsoft.AspNetCore.Builder;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using YouTrackInsight.Entity;
 using Microsoft.EntityFrameworkCore;
+using Bakfoo.Entity;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,15 +18,20 @@ builder.Services.AddSignalR();
 
 builder.Services.AddDbContext<YTInsightDbContext>(options =>
 {
-    options.UseNpgsql(builder.Configuration.GetConnectionString("yt_insight_db"));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("yt_insight_db"),
+        x => x.MigrationsAssembly("YouTrackInsight"));
+});
+
+builder.Services.AddBakfoo<YouTrackInsightHubClients>(builder.Configuration, dbOptions =>
+{
+    dbOptions.UseNpgsql(builder.Configuration.GetConnectionString("yt_insight_db"),
+        x => x.MigrationsAssembly("YouTrackInsight"));
 });
 
 builder.Services.Configure<YouTrackInsightOptions>(
-builder.Configuration.GetSection(YouTrackInsightOptions.ConfigSectionName));
+    builder.Configuration.GetSection(YouTrackInsightOptions.ConfigSectionName));
 builder.Services.AddSingleton<YouTrackClientService>();
-builder.Services.AddHostedService<YTIssueImportManager>();
 builder.Services.AddScoped<YTIssueImportService>();
-builder.Services.AddScoped<YTIssueImportWorker>();
 builder.Services.AddScoped<YouTrackInsightHubClients>();
 
 builder.Services.AddControllersWithViews()
@@ -54,24 +59,30 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-using (var scope = app.Services.CreateScope())
+void UpdateDatabaseFor<TDbContext>() where TDbContext : DbContext
 {
-    var context = scope.ServiceProvider.GetRequiredService<YTInsightDbContext>();
-    //context.Database.EnsureCreated();
-    var applied = context.Database.GetAppliedMigrations().ToArray();
-    var pendingMigrations = context.Database.GetPendingMigrations();
-    if (pendingMigrations.Any())
+    using (var scope = app.Services.CreateScope())
     {
-        Console.Write("Database has pending migrations. Do you want to apply them? (FALSE/true): ");
-        var input = Console.ReadLine();
-        if (Boolean.TryParse(input, out var isMigrating) && isMigrating)
+        var context = scope.ServiceProvider.GetRequiredService<TDbContext>();
+        //context.Database.EnsureCreated();
+        var applied = context.Database.GetAppliedMigrations().ToArray();
+        var pendingMigrations = context.Database.GetPendingMigrations();
+        if (pendingMigrations.Any())
         {
-            context.Database.Migrate();
+            Console.Write($"Database has pending migrations for {typeof(TDbContext).Name}. Do you want to apply them? (FALSE/true): ");
+            var input = Console.ReadLine();
+            if (Boolean.TryParse(input, out var isMigrating) && isMigrating)
+            {
+                context.Database.Migrate();
+            }
+            else
+                throw new InvalidOperationException($"Database has pending migrations for {typeof(TDbContext).Name}.");
         }
-        else
-            throw new InvalidOperationException("Database has pending migrations.");
     }
 }
+
+UpdateDatabaseFor<YTInsightDbContext>();
+UpdateDatabaseFor<BakfooDbContext>();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

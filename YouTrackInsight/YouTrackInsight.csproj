@@ -6,8 +6,9 @@
     <IsPackable>false</IsPackable>
     <SpaRoot>..\nx-workspace\</SpaRoot>
     <SpaProxyServerUrl>http://localhost:4200</SpaProxyServerUrl>
-    <RootNamespace>YouTrackInsight</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>YouTrackInsight</RootNamespace>
+    <AssemblyName>YouTrackInsight</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'Default' ">
@@ -21,9 +22,6 @@
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.4.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
     <PackageReference Include="System.Interactive.Async" Version="6.0.1" />
-    <PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
-    <PackageReference Include="Grpc.AspNetCore.Server.Reflection" Version="2.49.0" />
-    <PackageReference Include="Grpc.AspNetCore.Web" Version="2.49.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -43,15 +41,15 @@
     <None Remove="Domain\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\youtrack-insight-entity\youtrack-insight-entity.csproj">
-      <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
-    </ProjectReference>
-    <ProjectReference Include="..\youtrack-insight-domain\youtrack-insight-domain.csproj">
-      <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
-    </ProjectReference>
+    <Folder Include="Domain\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Domain\" />
+    <ProjectReference Include="..\YouTrackInsight.Domain\YouTrackInsight.Domain.csproj">
+      <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
+    </ProjectReference>
+    <ProjectReference Include="..\Bakfoo\Bakfoo.csproj">
+      <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
+    </ProjectReference>
   </ItemGroup>
   <Target Name="DebugEnsureNodeEnv" BeforeTargets="Build" Condition=" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') ">
     <!-- Ensure Node.js is installed -->

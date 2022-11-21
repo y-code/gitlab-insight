@@ -2,18 +2,21 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using YouTrackInsight.Entity;
 
 #nullable disable
 
-namespace YouTrackInsight.Entity.Migrations
+namespace YouTrackInsight.Migrations.YTInsight
 {
     [DbContext(typeof(YTInsightDbContext))]
-    partial class YTInsightDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221121114410_initial")]
+    partial class initial
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,42 +24,6 @@ namespace YouTrackInsight.Entity.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("YouTrackInsight.Entity.YTIssueImportTask", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset?>("End")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("end");
-
-                    b.Property<bool>("HasError")
-                        .HasColumnType("boolean")
-                        .HasColumnName("has_error");
-
-                    b.Property<bool>("IsCancelled")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_cancelled");
-
-                    b.Property<string>("Message")
-                        .HasColumnType("text")
-                        .HasColumnName("message");
-
-                    b.Property<DateTimeOffset?>("Start")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("start");
-
-                    b.Property<DateTimeOffset?>("Submitted")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("submitted");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("issue_import_task");
-                });
 
             modelBuilder.Entity("YouTrackInsight.Entity.YTIssueLinkModel", b =>
                 {

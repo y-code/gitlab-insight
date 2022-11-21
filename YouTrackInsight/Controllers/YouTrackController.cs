@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Net;
+using Bakfoo;
+using Bakfoo.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using YouTrackInsight.Domain;
@@ -13,15 +15,18 @@ namespace YouTrackInsight.Controllers;
 public class YouTrackController : ControllerBase
 {
     private readonly YouTrackClientService _client;
+    private readonly BakfooService _jobManagementService;
     private readonly YTIssueImportService _issueImportService;
     private readonly YouTrackInsightHubClients _hubClients;
 
     public YouTrackController(
         YouTrackClientService client,
+        BakfooService jobManagementService,
         YTIssueImportService issueImportService,
         YouTrackInsightHubClients hubClients)
     {
         _client = client;
+        _jobManagementService = jobManagementService;
         _issueImportService = issueImportService;
         _hubClients = hubClients;
     }
@@ -34,8 +39,8 @@ public class YouTrackController : ControllerBase
     }
 
     [HttpGet("issue-import")]
-    public IAsyncEnumerable<YTIssueImportTask> GetIssueImportTasks([FromQuery] IEnumerable<Guid> id)
-        => _issueImportService.GetTasksAsync();
+    public IAsyncEnumerable<BakfooJob> GetIssueImportTasks([FromQuery] IEnumerable<Guid> id)
+        => _jobManagementService.GetTasksAsync();
 
     public class SubmitIssueImportRequest
     {
@@ -47,7 +52,7 @@ public class YouTrackController : ControllerBase
     {
         try
         {
-            await _issueImportService.SubmitTaskAsync(request.Id, ct);
+            await _jobManagementService.SubmitTaskAsync(request.Id, ct);
         }
         catch (ArgumentException e)
         {
@@ -73,7 +78,7 @@ public class YouTrackController : ControllerBase
     {
         try
         {
-            await _issueImportService.CancelTaskAsync(request.Id, ct);
+            await _jobManagementService.CancelTaskAsync(request.Id, ct);
         }
         catch (ArgumentException e)
         {

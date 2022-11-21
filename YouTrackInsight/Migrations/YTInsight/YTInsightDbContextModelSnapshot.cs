@@ -2,21 +2,18 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using YouTrackInsight.Entity;
 
 #nullable disable
 
-namespace YouTrackInsight.Entity.Migrations
+namespace YouTrackInsight.Migrations.YTInsight
 {
     [DbContext(typeof(YTInsightDbContext))]
-    [Migration("20221113072926_initial")]
-    partial class initial
+    partial class YTInsightDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -24,34 +21,6 @@ namespace YouTrackInsight.Entity.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
-
-            modelBuilder.Entity("YouTrackInsight.Entity.YTIssueImportTask", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTimeOffset?>("End")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("end");
-
-                    b.Property<bool>("HasError")
-                        .HasColumnType("boolean")
-                        .HasColumnName("has_error");
-
-                    b.Property<string>("Message")
-                        .HasColumnType("text")
-                        .HasColumnName("message");
-
-                    b.Property<DateTimeOffset?>("Start")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("start");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("issue_import_task");
-                });
 
             modelBuilder.Entity("YouTrackInsight.Entity.YTIssueLinkModel", b =>
                 {

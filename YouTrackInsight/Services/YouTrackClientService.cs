@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.Options;
 using YouTrackInsight.Domain;
 using YouTrackInsight.Entity;
 using YouTrackSharp;
@@ -28,6 +29,7 @@ public class YouTrackClientService
         ResetConnection();
     }
 
+    [MemberNotNull(nameof(_projectsService), nameof(_issuesService))]
     private void ResetConnection()
     {
         _connection = new BearerTokenConnection(

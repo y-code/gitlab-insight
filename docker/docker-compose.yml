@@ -22,3 +22,7 @@ services:
     volumes:
       - '$POSTGRES_HOME/data:/var/lib/postgresql/data'
 
+networks:
+  insight-network:
+    driver: bridge
+

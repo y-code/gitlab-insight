@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace YouTrackInsight.Entity.Migrations
+namespace YouTrackInsight.Migrations.YTInsight
 {
     /// <inheritdoc />
     public partial class initial : Migration
@@ -11,21 +11,6 @@ namespace YouTrackInsight.Entity.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.CreateTable(
-                name: "issue_import_task",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
-                    start = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    end = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
-                    haserror = table.Column<bool>(name: "has_error", type: "boolean", nullable: false),
-                    message = table.Column<string>(type: "text", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_issue_import_task", x => x.id);
-                });
-
             migrationBuilder.CreateTable(
                 name: "yt_issue",
                 columns: table => new
@@ -69,9 +54,6 @@ namespace YouTrackInsight.Entity.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "issue_import_task");
-
             migrationBuilder.DropTable(
                 name: "yt_issue_link");
 

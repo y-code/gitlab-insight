@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using Bakfoo;
+using Microsoft.AspNetCore.SignalR;
 
 namespace YouTrackInsight.Services;
 
@@ -21,7 +22,7 @@ public class YouTrackInsightHub : Hub
     }
 }
 
-public class YouTrackInsightHubClients
+public class YouTrackInsightHubClients : IBakfooObserver
 {
     const string OnIssueImportTaskUpdated = nameof(OnIssueImportTaskUpdated);
 
