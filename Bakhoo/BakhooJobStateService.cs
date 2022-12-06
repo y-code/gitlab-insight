@@ -16,8 +16,8 @@ public interface IBakhooJobStateService
     Task StartJobAsync(Guid id, CancellationToken ct);
     Task CancelJobAsync(Guid id, CancellationToken ct);
     Task UpdateSuccessfulJobStateAsync(Guid id, CancellationToken ct);
-    Task UpdateCancelledJobStateAsync(Guid taskId, string message, CancellationToken ct);
-    Task UpdateFailedJobStateAsync(Guid taskId, string message, CancellationToken ct);
+    Task UpdateCancelledJobStateAsync(Guid id, string message, CancellationToken ct);
+    Task UpdateFailedJobStateAsync(Guid id, string message, CancellationToken ct);
 }
 
 internal class BakhooJobStateService : IBakhooJobStateService
@@ -181,6 +181,7 @@ internal class BakhooJobStateService : IBakhooJobStateService
 
         task.IsCancelling = false;
         task.IsCancelled = true;
+        task.Start ??= DateTimeOffset.UtcNow;
         task.End = DateTimeOffset.UtcNow;
         task.Message = message;
 

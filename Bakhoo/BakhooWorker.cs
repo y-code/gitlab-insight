@@ -153,10 +153,19 @@ internal class BakhooWorker : IBakhooWorker
     {
         try
         {
-            var isInTime = false;
             try
             {
-                isInTime = runTask.Wait(TimeSpan.FromSeconds(20));
+                var isInTime = runTask.Wait(TimeSpan.FromSeconds(20));
+
+                if (isInTime)
+                {
+                    if (taskCts.IsCancellationRequested)
+                        await UpdateCancelledJobStateAsync(cancelCt);
+                    else
+                        await _importService.UpdateSuccessfulJobStateAsync(JobId, cancelCt);
+                }
+                else
+                    await _importService.UpdateFailedJobStateAsync(JobId, "The cancellation timed out.", cancelCt);
             }
             catch (TaskCanceledException e)
             {
@@ -172,16 +181,6 @@ internal class BakhooWorker : IBakhooWorker
                 await UpdateCancelledJobStateAsync(cancelCt);
             }
 
-            if (isInTime)
-            {
-                if (taskCts.IsCancellationRequested)
-                    await UpdateCancelledJobStateAsync(cancelCt);
-                else
-                    await _importService.UpdateSuccessfulJobStateAsync(JobId, cancelCt);
-            }
-            else
-                await _importService.UpdateFailedJobStateAsync(JobId, "The cancellation timed out.", cancelCt);
-
             await _observer.NotifyIssueImportJobUpdatedAsync(JobId, cancelCt);
         }
         catch (Exception e)
@@ -191,5 +190,5 @@ internal class BakhooWorker : IBakhooWorker
     }
 
     private Task UpdateCancelledJobStateAsync(CancellationToken ct)
-        => _importService.UpdateCancelledJobStateAsync(JobId, "The task was canceled", ct);
+        => _importService.UpdateCancelledJobStateAsync(JobId, "The task was canceled.", ct);
 }

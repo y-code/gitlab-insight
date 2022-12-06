@@ -20,6 +20,6 @@ public class YTIssueImportService : IBakhooJobHandler<IssueImportJob>
 
     public async Task Handle(IssueImportJob job, CancellationToken ct)
     {
-        await Task.Delay(TimeSpan.FromSeconds(5), ct);
+        await Task.Delay(TimeSpan.FromSeconds(10), ct);
     }
 }
