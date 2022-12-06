@@ -1,0 +1,16 @@
+version: '3.6'
+
+services:
+  postgresql:
+    image: 'apache/age:v1.1.0'
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_PASSWORD=test
+    volumes:
+      - '$POSTGRES_HOME/data:/var/lib/postgresql/data'
+
+networks:
+  insight-network:
+    driver: bridge
+

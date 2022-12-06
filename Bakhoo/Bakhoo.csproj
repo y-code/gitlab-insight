@@ -4,19 +4,17 @@
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <RootNamespace>Bakfoo</RootNamespace>
-    <AssemblyName>Bakfoo</AssemblyName>
+    <RootNamespace>Bakhoo</RootNamespace>
+    <AssemblyName>Bakhoo</AssemblyName>
     <OutputType>Library</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="Microsoft.EntityFrameworkCore.Design" />
-    <None Remove="System.Interactive.Async" />
-    <None Remove="Microsoft.Extensions.DependencyInjection" />
-    <None Remove="Microsoft.Extensions.Hosting.Abstractions" />
-    <None Remove="Microsoft.Extensions.Configuration.Abstractions" />
-    <None Remove="Microsoft.Extensions.Configuration" />
-    <None Remove="Microsoft.Extensions.Options.ConfigurationExtensions" />
-    <None Remove="Microsoft.Extensions.Logging.Abstractions" />
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>Bakhoo.Test</_Parameter1>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>DynamicProxyGenAssembly2</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.0">
@@ -31,6 +29,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Bakfoo.Entity\Bakfoo.Entity.csproj" />
+    <ProjectReference Include="..\Bakhoo.Entity\Bakhoo.Entity.csproj" />
   </ItemGroup>
 </Project>

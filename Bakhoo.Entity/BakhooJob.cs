@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Bakfoo.Entity;
+namespace Bakhoo.Entity;
 
-[Table("job", Schema = "bakfoo")]
-public class BakfooJob
+[Table("job", Schema = "bakhoo")]
+public class BakhooJob
 {
     [Column("id")]
     public Guid Id { get; set; }
@@ -23,4 +23,8 @@ public class BakfooJob
     public bool HasError { get; set; }
     [Column("message")]
     public string? Message { get; set; }
+    [Column("type")]
+    public string? Type { get; set; }
+    [Column("data", TypeName = "jsonb")]
+    public string? Data { get; set; }
 }

@@ -1,4 +1,4 @@
-﻿using Bakfoo;
+﻿using Bakhoo;
 using Microsoft.AspNetCore.SignalR;
 
 namespace YouTrackInsight.Services;
@@ -22,7 +22,7 @@ public class YouTrackInsightHub : Hub
     }
 }
 
-public class YouTrackInsightHubClients : IBakfooObserver
+public class YouTrackInsightHubClients : IBakhooJobStateObserver
 {
     const string OnIssueImportTaskUpdated = nameof(OnIssueImportTaskUpdated);
 
@@ -33,7 +33,7 @@ public class YouTrackInsightHubClients : IBakfooObserver
         _context = context;
     }
 
-    public async Task NotifyIssueImportTaskUpdatedAsync(Guid taskId, CancellationToken ct)
+    public async Task NotifyIssueImportJobUpdatedAsync(Guid taskId, CancellationToken ct)
     {
         await _context.Clients.Group(YouTrackInsightHub.GROUP_ISSUE_IMPORT)
             .SendAsync(OnIssueImportTaskUpdated, taskId, ct);

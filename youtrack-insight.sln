@@ -9,9 +9,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YouTrackInsight.Domain", "Y
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YouTrackInsight.Entity", "YouTrackInsight.Entity\YouTrackInsight.Entity.csproj", "{033C0D96-6541-4C03-AE07-08BC31A35E64}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakfoo", "Bakfoo\Bakfoo.csproj", "{5089910A-60AA-46AB-9773-7AFCA2660FC0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakhoo", "Bakhoo\Bakhoo.csproj", "{5089910A-60AA-46AB-9773-7AFCA2660FC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakfoo.Entity", "Bakfoo.Entity\Bakfoo.Entity.csproj", "{8B5F4988-E3B5-490D-B74E-2E873251B432}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakhoo.Entity", "Bakhoo.Entity\Bakhoo.Entity.csproj", "{8B5F4988-E3B5-490D-B74E-2E873251B432}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakhoo.Test", "Bakhoo.Test\Bakhoo.Test.csproj", "{7CD18430-7FAE-45C3-8780-2B243D083588}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Bakhoo.Entity.Test", "Bakhoo.Entity.Test\Bakhoo.Entity.Test.csproj", "{3677E385-D394-46DC-BFB1-9AFE5EFB44C4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,5 +46,13 @@ Global
 		{8B5F4988-E3B5-490D-B74E-2E873251B432}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8B5F4988-E3B5-490D-B74E-2E873251B432}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8B5F4988-E3B5-490D-B74E-2E873251B432}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CD18430-7FAE-45C3-8780-2B243D083588}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CD18430-7FAE-45C3-8780-2B243D083588}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CD18430-7FAE-45C3-8780-2B243D083588}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CD18430-7FAE-45C3-8780-2B243D083588}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3677E385-D394-46DC-BFB1-9AFE5EFB44C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3677E385-D394-46DC-BFB1-9AFE5EFB44C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3677E385-D394-46DC-BFB1-9AFE5EFB44C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3677E385-D394-46DC-BFB1-9AFE5EFB44C4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -5,7 +5,8 @@ using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using YouTrackInsight.Entity;
 using Microsoft.EntityFrameworkCore;
-using Bakfoo.Entity;
+using Bakhoo.Entity;
+using Bakhoo;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,7 +23,7 @@ builder.Services.AddDbContext<YTInsightDbContext>(options =>
         x => x.MigrationsAssembly("YouTrackInsight"));
 });
 
-builder.Services.AddBakfoo<YouTrackInsightHubClients>(builder.Configuration, dbOptions =>
+builder.Services.AddBakhoo<YouTrackInsightHubClients>(builder.Configuration, dbOptions =>
 {
     dbOptions.UseNpgsql(builder.Configuration.GetConnectionString("yt_insight_db"),
         x => x.MigrationsAssembly("YouTrackInsight"));
@@ -33,6 +34,8 @@ builder.Services.Configure<YouTrackInsightOptions>(
 builder.Services.AddSingleton<YouTrackClientService>();
 builder.Services.AddScoped<YTIssueImportService>();
 builder.Services.AddScoped<YouTrackInsightHubClients>();
+builder.Services.AddScoped<IBakhooJobHandler>(provider
+    => provider.GetRequiredService<YTIssueImportService>());
 
 builder.Services.AddControllersWithViews()
     .AddJsonOptions(options =>
@@ -82,7 +85,7 @@ void UpdateDatabaseFor<TDbContext>() where TDbContext : DbContext
 }
 
 UpdateDatabaseFor<YTInsightDbContext>();
-UpdateDatabaseFor<BakfooDbContext>();
+UpdateDatabaseFor<BakhooDbContext>();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

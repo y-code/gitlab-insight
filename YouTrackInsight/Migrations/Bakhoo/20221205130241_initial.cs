@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace YouTrackInsight.Migrations.Bakfoo
+namespace YouTrackInsight.Migrations.Bakhoo
 {
     /// <inheritdoc />
     public partial class initial : Migration
@@ -12,11 +12,11 @@ namespace YouTrackInsight.Migrations.Bakfoo
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.EnsureSchema(
-                name: "bakfoo");
+                name: "bakhoo");
 
             migrationBuilder.CreateTable(
                 name: "job",
-                schema: "bakfoo",
+                schema: "bakhoo",
                 columns: table => new
                 {
                     id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -27,7 +27,9 @@ namespace YouTrackInsight.Migrations.Bakfoo
                     cancelrequested = table.Column<DateTimeOffset>(name: "cancel_requested", type: "timestamp with time zone", nullable: true),
                     iscancelled = table.Column<bool>(name: "is_cancelled", type: "boolean", nullable: false),
                     haserror = table.Column<bool>(name: "has_error", type: "boolean", nullable: false),
-                    message = table.Column<string>(type: "text", nullable: true)
+                    message = table.Column<string>(type: "text", nullable: true),
+                    type = table.Column<string>(type: "text", nullable: true),
+                    data = table.Column<string>(type: "jsonb", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -40,7 +42,7 @@ namespace YouTrackInsight.Migrations.Bakfoo
         {
             migrationBuilder.DropTable(
                 name: "job",
-                schema: "bakfoo");
+                schema: "bakhoo");
         }
     }
 }

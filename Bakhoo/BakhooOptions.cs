@@ -1,8 +1,8 @@
-﻿namespace Bakfoo;
+﻿namespace Bakhoo;
 
-public class BakfooOptions
+public class BakhooOptions
 {
-    public const string ConfigSectionName = "Bakfoo";
+    public const string ConfigSectionName = "Bakhoo";
 
     public int MaxBacklogTasks { get; set; } = 3;
     public int MaxParallelTasks { get; set; } = 1;

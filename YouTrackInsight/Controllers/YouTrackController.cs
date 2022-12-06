@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
-using Bakfoo;
-using Bakfoo.Entity;
+using Bakhoo;
+using Bakhoo.Entity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using YouTrackInsight.Domain;
@@ -15,13 +15,13 @@ namespace YouTrackInsight.Controllers;
 public class YouTrackController : ControllerBase
 {
     private readonly YouTrackClientService _client;
-    private readonly BakfooService _jobManagementService;
+    private readonly IBakhooJobStateService _jobManagementService;
     private readonly YTIssueImportService _issueImportService;
     private readonly YouTrackInsightHubClients _hubClients;
 
     public YouTrackController(
         YouTrackClientService client,
-        BakfooService jobManagementService,
+        IBakhooJobStateService jobManagementService,
         YTIssueImportService issueImportService,
         YouTrackInsightHubClients hubClients)
     {
@@ -39,8 +39,8 @@ public class YouTrackController : ControllerBase
     }
 
     [HttpGet("issue-import")]
-    public IAsyncEnumerable<BakfooJob> GetIssueImportTasks([FromQuery] IEnumerable<Guid> id)
-        => _jobManagementService.GetTasksAsync();
+    public IAsyncEnumerable<BakhooJob> GetIssueImportTasks([FromQuery] IEnumerable<Guid> id)
+        => _jobManagementService.GetJobsAsync();
 
     public class SubmitIssueImportRequest
     {
@@ -52,7 +52,7 @@ public class YouTrackController : ControllerBase
     {
         try
         {
-            await _jobManagementService.SubmitTaskAsync(request.Id, ct);
+            await _jobManagementService.SubmitJobAsync(request.Id, new IssueImportJob { }, ct);
         }
         catch (ArgumentException e)
         {
@@ -63,7 +63,7 @@ public class YouTrackController : ControllerBase
             return Problem(e.Message);
         }
 
-        await _hubClients.NotifyIssueImportTaskUpdatedAsync(request.Id, ct);
+        await _hubClients.NotifyIssueImportJobUpdatedAsync(request.Id, ct);
 
         return Ok();
     }
@@ -78,7 +78,7 @@ public class YouTrackController : ControllerBase
     {
         try
         {
-            await _jobManagementService.CancelTaskAsync(request.Id, ct);
+            await _jobManagementService.CancelJobAsync(request.Id, ct);
         }
         catch (ArgumentException e)
         {
@@ -89,7 +89,7 @@ public class YouTrackController : ControllerBase
             return Problem(e.Message);
         }
 
-        await _hubClients.NotifyIssueImportTaskUpdatedAsync(request.Id, ct);
+        await _hubClients.NotifyIssueImportJobUpdatedAsync(request.Id, ct);
 
         return Ok();
     }
