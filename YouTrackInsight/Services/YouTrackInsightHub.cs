@@ -22,7 +22,7 @@ public class YouTrackInsightHub : Hub
     }
 }
 
-public class YouTrackInsightHubClients : IBakhooJobStateObserver
+public class YouTrackInsightHubClients : IBakhooJobMonitor
 {
     const string OnIssueImportTaskUpdated = nameof(OnIssueImportTaskUpdated);
 

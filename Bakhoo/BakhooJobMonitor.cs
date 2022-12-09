@@ -1,6 +1,6 @@
 ﻿namespace Bakhoo;
 
-public interface IBakhooJobStateObserver
+public interface IBakhooJobMonitor
 {
     Task NotifyIssueImportJobUpdatedAsync(Guid jobId, CancellationToken ct);
 }

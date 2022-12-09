@@ -12,7 +12,7 @@ public static class ServiceConfiguration
         this IServiceCollection services,
         IConfiguration config,
         Action<DbContextOptionsBuilder> optionsAction)
-        where TObserver : class, IBakhooJobStateObserver
+        where TObserver : class, IBakhooJobMonitor
         => AddBakhoo<TObserver>(services,
             config.GetSection(BakhooOptions.ConfigSectionName),
             optionsAction);
@@ -21,13 +21,13 @@ public static class ServiceConfiguration
         this IServiceCollection services,
         IConfigurationSection config,
         Action<DbContextOptionsBuilder> optionsAction)
-        where TObserver : class, IBakhooJobStateObserver
+        where TObserver : class, IBakhooJobMonitor
     {
         services.AddDbContext<BakhooDbContext>(optionsAction);
         services.Configure<BakhooOptions>(config);
-        services.AddScoped<IBakhooJobStateService, BakhooJobStateService>();
-        services.AddHostedService<BakhooJobManager>();
-        services.AddScoped<IBakhooWorker, BakhooWorker>();
-        services.AddScoped<IBakhooJobStateObserver, TObserver>();
+        services.AddScoped<IBakhooJobRepository, BakhooJobStateService>();
+        services.AddHostedService<BakhooLord>();
+        services.AddScoped<IBakhooWorker, BakhooVassal>();
+        services.AddScoped<IBakhooJobMonitor, TObserver>();
     }
 }

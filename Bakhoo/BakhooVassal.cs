@@ -8,6 +8,13 @@ using Microsoft.Extensions.Logging;
 
 namespace Bakhoo;
 
+public interface IBakhooJobHandler { }
+
+public interface IBakhooJobHandler<TJobType> : IBakhooJobHandler
+{
+    Task Handle(TJobType job, CancellationToken ct);
+}
+
 internal interface IBakhooWorker
 {
     Guid JobId { get; }
@@ -17,10 +24,10 @@ internal interface IBakhooWorker
     void Cancel();
 }
 
-internal class BakhooWorker : IBakhooWorker
+internal class BakhooVassal : IBakhooWorker
 {
-    private readonly IBakhooJobStateService _importService;
-    private readonly IBakhooJobStateObserver _observer;
+    private readonly IBakhooJobRepository _importService;
+    private readonly IBakhooJobMonitor _observer;
     private readonly IEnumerable<IBakhooJobHandler> _jobHandlers;
     private readonly ILogger _logger;
 
@@ -29,11 +36,11 @@ internal class BakhooWorker : IBakhooWorker
     private CancellationTokenSource? _taskCts;
     public Task? CancelationTask { get; private set; }
 
-    public BakhooWorker(
-        IBakhooJobStateService importService,
-        IBakhooJobStateObserver observer,
+    public BakhooVassal(
+        IBakhooJobRepository importService,
+        IBakhooJobMonitor observer,
         IEnumerable<IBakhooJobHandler> jobHandlers,
-        ILogger<BakhooWorker> logger)
+        ILogger<BakhooVassal> logger)
     {
         _importService = importService;
         _observer = observer;

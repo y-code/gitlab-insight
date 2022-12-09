@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 
 namespace Bakhoo;
 
-internal class BakhooJobManager : BackgroundService
+internal class BakhooLord : BackgroundService
 {
     private record WorkerContext(
         IServiceScope Scope,
@@ -20,10 +20,10 @@ internal class BakhooJobManager : BackgroundService
     private List<WorkerContext> _workerContexts = new();
     private bool _isStopping = false;
 
-    public BakhooJobManager(
+    public BakhooLord(
         IServiceProvider serviceProvider,
         IOptions<BakhooOptions> options,
-        ILogger<BakhooJobManager> logger)
+        ILogger<BakhooLord> logger)
     {
         _serviceProvider = serviceProvider;
         _options = options.Value;
@@ -66,11 +66,11 @@ internal class BakhooJobManager : BackgroundService
                 }
             }
 
-            if (_workerContexts.Count < _options.MaxParallelTasks)
+            if (_workerContexts.Count < _options.MaxParallelJobs)
             {
                 using (var scope = _serviceProvider.CreateScope())
                 {
-                    var importService = scope.ServiceProvider.GetRequiredService<IBakhooJobStateService>();
+                    var importService = scope.ServiceProvider.GetRequiredService<IBakhooJobRepository>();
                     var importJobs = importService.GetJobsInBacklogAsync();
                     var cancellingJobs = new List<BakhooJob>();
 
@@ -85,7 +85,7 @@ internal class BakhooJobManager : BackgroundService
                             continue;
                         }
 
-                        if (_workerContexts.Count >= _options.MaxParallelTasks)
+                        if (_workerContexts.Count >= _options.MaxParallelJobs)
                             break;
 
                         var workerScope = _serviceProvider.CreateScope();
@@ -97,7 +97,7 @@ internal class BakhooJobManager : BackgroundService
 
                     foreach (var job in cancellingJobs)
                     {
-                        var observer = scope.ServiceProvider.GetRequiredService<IBakhooJobStateObserver>();
+                        var observer = scope.ServiceProvider.GetRequiredService<IBakhooJobMonitor>();
                         await importService.UpdateCancelledJobStateAsync(job.Id, "The task was canceled.", ct);
                         await observer.NotifyIssueImportJobUpdatedAsync(job.Id, ct);
                     }
@@ -120,7 +120,7 @@ internal class BakhooJobManager : BackgroundService
             {
                 _logger.LogDebug("Checking jobs to cancell...");
 
-                var importService = scope.ServiceProvider.GetRequiredService<IBakhooJobStateService>();
+                var importService = scope.ServiceProvider.GetRequiredService<IBakhooJobRepository>();
                 var tasks = importService.GetJobsInBacklogAsync();
 
                 tasks = importService.GetJobsToCancelAsync();

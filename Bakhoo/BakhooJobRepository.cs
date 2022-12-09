@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace Bakhoo;
 
-public interface IBakhooJobStateService
+public interface IBakhooJobRepository
 {
     IAsyncEnumerable<BakhooJob> GetJobsAsync();
     IAsyncEnumerable<BakhooJob> GetJobsInBacklogAsync();
@@ -20,7 +20,7 @@ public interface IBakhooJobStateService
     Task UpdateFailedJobStateAsync(Guid id, string message, CancellationToken ct);
 }
 
-internal class BakhooJobStateService : IBakhooJobStateService
+internal class BakhooJobStateService : IBakhooJobRepository
 {
     private readonly BakhooDbContext _db;
     private readonly BakhooOptions _options;
@@ -35,33 +35,33 @@ internal class BakhooJobStateService : IBakhooJobStateService
 
     public IAsyncEnumerable<BakhooJob> GetJobsAsync()
     {
-        var oldestToDisplayCompletedTasks = DateTimeOffset.UtcNow - TimeSpan.FromHours(_options.MaxHoursToDisplayCompletedTasks);
+        var oldestToDisplayCompletedJobs = DateTimeOffset.UtcNow - TimeSpan.FromHours(_options.MaxHoursToDisplayCompletedJobs);
 
-        var tasksInBacklog = _db.Jobs
+        var jobsInBacklog = _db.Jobs
             .Where(x => !x.Start.HasValue)
             .OrderByDescending(x => x.Submitted);
 
-        var tasksInProgress = _db.Jobs
+        var jobsInProgress = _db.Jobs
             .Where(x => x.Start.HasValue && !x.End.HasValue)
             .OrderByDescending(x => x.Start);
 
-        var tasksAlreadyDone = _db.Jobs
+        var jobsAlreadyDone = _db.Jobs
             .Where(x =>
                 x.End.HasValue
-                && x.End > oldestToDisplayCompletedTasks)
+                && x.End > oldestToDisplayCompletedJobs)
             .OrderByDescending(x => x.Start);
 
-        return tasksInBacklog.Concat(tasksInProgress.Concat(tasksAlreadyDone))
+        return jobsInBacklog.Concat(jobsInProgress.Concat(jobsAlreadyDone))
             .AsAsyncEnumerable();
     }
 
-    public IQueryable<BakhooJob> TasksInBacklog
+    public IQueryable<BakhooJob> JobsInBacklog
         => _db.Jobs
             .Where(x => !x.Start.HasValue)
             .OrderBy(x => x.Submitted);
 
     public IAsyncEnumerable<BakhooJob> GetJobsInBacklogAsync()
-        => TasksInBacklog.ToAsyncEnumerable();
+        => JobsInBacklog.ToAsyncEnumerable();
 
     public IAsyncEnumerable<BakhooJob> GetJobsToCancelAsync()
         => _db.Jobs
@@ -80,20 +80,20 @@ internal class BakhooJobStateService : IBakhooJobStateService
         if (id == default)
             throw new ArgumentException($"A UUID is required for parameter `id` is required.", nameof(id));
 
-        var existingIds = await TasksInBacklog.Select(x => x.Id)
+        var existingIds = await JobsInBacklog.Select(x => x.Id)
             .ToAsyncEnumerable().ToArrayAsync(ct);
 
         if (existingIds.Contains(id)) return;
 
-        if (existingIds.Count() >= _options.MaxBacklogTasks)
-            throw new InvalidOperationException($"{existingIds.Count()} tasks has already been waiting. It is not allowed to submit any more task.");
+        if (existingIds.Count() >= _options.MaxBacklogJobs)
+            throw new InvalidOperationException($"{existingIds.Count()} jobs has already been waiting. It is not allowed to submit any more job.");
 
         await _db.AddAsync(new BakhooJob
         {
             Id = id,
             Type = typeof(TData).FullName,
             Submitted = DateTimeOffset.UtcNow,
-            Message = "Waiting for the Issue Import task to begin.",
+            Message = "Waiting for the Issue Import job to begin.",
             Data = JsonSerializer.Serialize(jobData),
         }, ct);
 
@@ -105,20 +105,20 @@ internal class BakhooJobStateService : IBakhooJobStateService
         if (id == default)
             throw new ArgumentException($"A UUID is required for parameter `id` is required.", nameof(id));
 
-        var importTask = await GetJobAsync(id, ct);
+        var job = await GetJobAsync(id, ct);
 
-        if (importTask == null)
-            throw new ArgumentException($"There is no task with ID {id}", nameof(id));
+        if (job == null)
+            throw new ArgumentException($"There is no job with ID {id}", nameof(id));
 
-        if (importTask.IsCancelled) return;
+        if (job.IsCancelled) return;
 
-        importTask.Start = DateTimeOffset.UtcNow;
-        importTask.Message = "Issue import is in progress.";
+        job.Start = DateTimeOffset.UtcNow;
+        job.Message = "Issue import is in progress.";
 
-        if (importTask.IsCancelling)
+        if (job.IsCancelling)
         {
-            importTask.IsCancelled = true;
-            importTask.End = importTask.Start;
+            job.IsCancelled = true;
+            job.End = job.Start;
         }
 
         await _db.SaveChangesAsync(ct);
@@ -129,81 +129,81 @@ internal class BakhooJobStateService : IBakhooJobStateService
         if (id == default)
             throw new ArgumentException($"A UUID is required for parameter `id` is required.", nameof(id));
 
-        var task = (await _db.Jobs
+        var job = (await _db.Jobs
             .Where(x => x.Id == id)
             .ToAsyncEnumerable()
             .ToListAsync(ct))
             .FirstOrDefault();
 
-        if (task == null)
-            throw new InvalidOperationException($"There is no task with ID {id}.");
+        if (job == null)
+            throw new InvalidOperationException($"There is no job with ID {id}.");
 
-        if (task.IsCancelled)
+        if (job.IsCancelled)
             throw new InvalidOperationException($"Task {id} has already been canceled.");
 
-        if (task.HasError)
+        if (job.HasError)
             throw new InvalidOperationException($"Task {id} has had an error. So, cancellation is an invalid operation.");
 
-        task.IsCancelling = true;
-        task.CancelRequested = DateTimeOffset.UtcNow;
-        task.Message = "A user has requested to cancel this task. The task cancellation is in progress...";
+        job.IsCancelling = true;
+        job.CancelRequested = DateTimeOffset.UtcNow;
+        job.Message = "A user has requested to cancel this job. The job cancellation is in progress...";
 
         await _db.SaveChangesAsync(ct);
     }
 
     public async Task UpdateSuccessfulJobStateAsync(Guid id, CancellationToken ct)
     {
-        var task = (await _db.Jobs
+        var job = (await _db.Jobs
             .Where(x => x.Id == id)
             .ToAsyncEnumerable()
             .ToListAsync(ct))
             .FirstOrDefault();
 
-        if (task == null)
-            throw new ArgumentException($"There is no task with ID {id}");
+        if (job == null)
+            throw new ArgumentException($"There is no job with ID {id}");
 
-        task.End = DateTimeOffset.UtcNow;
-        task.Message = "Issue import has been successfully completed.";
+        job.End = DateTimeOffset.UtcNow;
+        job.Message = "Issue import has been successfully completed.";
 
         await _db.SaveChangesAsync(ct);
     }
 
     public async Task UpdateCancelledJobStateAsync(Guid id, string message, CancellationToken ct)
     {
-        var task = (await _db.Jobs
+        var job = (await _db.Jobs
             .Where(x => x.Id == id)
             .ToAsyncEnumerable()
             .ToListAsync(ct))
             .FirstOrDefault();
 
-        if (task == null)
-            throw new ArgumentException($"There is no task with ID {id}");
+        if (job == null)
+            throw new ArgumentException($"There is no job with ID {id}");
 
-        task.IsCancelling = false;
-        task.IsCancelled = true;
-        task.Start ??= DateTimeOffset.UtcNow;
-        task.End = DateTimeOffset.UtcNow;
-        task.Message = message;
+        job.IsCancelling = false;
+        job.IsCancelled = true;
+        job.Start ??= DateTimeOffset.UtcNow;
+        job.End = DateTimeOffset.UtcNow;
+        job.Message = message;
 
         await _db.SaveChangesAsync(ct);
     }
 
     public async Task UpdateFailedJobStateAsync(Guid id, string message, CancellationToken ct)
     {
-        var task = (await _db.Jobs
+        var job = (await _db.Jobs
             .Where(x => x.Id == id)
             .ToAsyncEnumerable()
             .ToListAsync(ct))
             .FirstOrDefault();
 
-        if (task == null)
-            throw new ArgumentException($"There is no task with ID {id}");
+        if (job == null)
+            throw new ArgumentException($"There is no job with ID {id}");
 
-        task.IsCancelling = false;
-        task.IsCancelled = false;
-        task.End = DateTimeOffset.UtcNow;
-        task.HasError = true;
-        task.Message = message;
+        job.IsCancelling = false;
+        job.IsCancelled = false;
+        job.End = DateTimeOffset.UtcNow;
+        job.HasError = true;
+        job.Message = message;
 
         await _db.SaveChangesAsync(ct);
     }

@@ -23,11 +23,13 @@ builder.Services.AddDbContext<YTInsightDbContext>(options =>
         x => x.MigrationsAssembly("YouTrackInsight"));
 });
 
-builder.Services.AddBakhoo<YouTrackInsightHubClients>(builder.Configuration, dbOptions =>
-{
-    dbOptions.UseNpgsql(builder.Configuration.GetConnectionString("yt_insight_db"),
-        x => x.MigrationsAssembly("YouTrackInsight"));
-});
+builder.Services.AddBakhoo<YouTrackInsightHubClients>(
+    builder.Configuration.GetSection("Bakhoo"),
+    dbOptions =>
+    {
+        dbOptions.UseNpgsql(builder.Configuration.GetConnectionString("yt_insight_db"),
+            x => x.MigrationsAssembly("YouTrackInsight"));
+    });
 
 builder.Services.Configure<YouTrackInsightOptions>(
     builder.Configuration.GetSection(YouTrackInsightOptions.ConfigSectionName));

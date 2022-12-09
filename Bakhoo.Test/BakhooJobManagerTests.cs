@@ -20,8 +20,8 @@ public class BakhooJobManagerTests
         Func<IBakhooWorker, BakhooJob, Task> workerRun)
     {
         services.AddTestLogging(_output);
-        services.AddSingleton<BakhooJobManager>();
-        services.AddMockedScoped<IBakhooJobStateService>((provider, mock) =>
+        services.AddSingleton<BakhooLord>();
+        services.AddMockedScoped<IBakhooJobRepository>((provider, mock) =>
         {
             var jobs = provider.GetRequiredService<List<BakhooJob>>();
             mock.Setup(x => x.GetJobsInBacklogAsync())
@@ -68,9 +68,9 @@ public class BakhooJobManagerTests
         });
         services.Configure<BakhooOptions>(options =>
         {
-            options.MaxBacklogTasks = 3;
-            options.MaxParallelTasks = 1;
-            options.MaxHoursToDisplayCompletedTasks = 24;
+            options.MaxBacklogJobs = 3;
+            options.MaxParallelJobs = 1;
+            options.MaxHoursToDisplayCompletedJobs = 24;
         });
 
         return services;
@@ -93,7 +93,7 @@ public class BakhooJobManagerTests
             workerRun: (worker, job) => workerRun(worker, job, cts));
         var provider = services.BuildServiceProvider();
 
-        var jobManager = provider.GetRequiredService<BakhooJobManager>();
+        var jobManager = provider.GetRequiredService<BakhooLord>();
 
         await jobManager.StartAsync(cts.Token);
 
@@ -114,7 +114,7 @@ public class BakhooJobManagerTests
         ServiceProvider provider
         )
     {
-        var jobManager = provider.GetRequiredService<BakhooJobManager>();
+        var jobManager = provider.GetRequiredService<BakhooLord>();
         var stopCts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
         await jobManager.StopAsync(stopCts.Token);
     }

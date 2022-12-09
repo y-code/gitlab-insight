@@ -4,7 +4,7 @@ public class BakhooOptions
 {
     public const string ConfigSectionName = "Bakhoo";
 
-    public int MaxBacklogTasks { get; set; } = 3;
-    public int MaxParallelTasks { get; set; } = 1;
-    public int MaxHoursToDisplayCompletedTasks { get; set; } = 24;
+    public int MaxBacklogJobs { get; set; } = 3;
+    public int MaxParallelJobs { get; set; } = 1;
+    public int MaxHoursToDisplayCompletedJobs { get; set; } = 24;
 }

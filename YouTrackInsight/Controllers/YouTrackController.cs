@@ -15,13 +15,13 @@ namespace YouTrackInsight.Controllers;
 public class YouTrackController : ControllerBase
 {
     private readonly YouTrackClientService _client;
-    private readonly IBakhooJobStateService _jobManagementService;
+    private readonly IBakhooJobRepository _jobManagementService;
     private readonly YTIssueImportService _issueImportService;
     private readonly YouTrackInsightHubClients _hubClients;
 
     public YouTrackController(
         YouTrackClientService client,
-        IBakhooJobStateService jobManagementService,
+        IBakhooJobRepository jobManagementService,
         YTIssueImportService issueImportService,
         YouTrackInsightHubClients hubClients)
     {

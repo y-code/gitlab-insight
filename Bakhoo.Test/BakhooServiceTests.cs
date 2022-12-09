@@ -21,7 +21,7 @@ public class BakhooServiceTests : IDisposable
 
 		var services = new ServiceCollection();
 		services.AddBakhooEntity(dbName);
-        services.AddScoped<IBakhooJobStateService, BakhooJobStateService>();
+        services.AddScoped<IBakhooJobRepository, BakhooJobStateService>();
 		IConfiguration config = new ConfigurationBuilder()
 			.AddInMemoryCollection(new Dictionary<string, string?>
 			{
@@ -75,7 +75,7 @@ public class BakhooServiceTests : IDisposable
         using (var scope = _provider.CreateAsyncScope())
         {
 			var service = scope.ServiceProvider
-				.GetRequiredService<IBakhooJobStateService>();
+				.GetRequiredService<IBakhooJobRepository>();
 			var cts = new CancellationTokenSource();
 			await service.SubmitJobAsync(job1Id, job1Data, cts.Token);
         }
@@ -113,7 +113,7 @@ public class BakhooServiceTests : IDisposable
         using (var scope = _provider.CreateAsyncScope())
         {
             var service = scope.ServiceProvider
-                .GetRequiredService<IBakhooJobStateService>();
+                .GetRequiredService<IBakhooJobRepository>();
             var cts = new CancellationTokenSource();
             await service.StartJobAsync(job1.Id, cts.Token);
         }

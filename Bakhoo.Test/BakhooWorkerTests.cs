@@ -78,10 +78,10 @@ public class BakhooWorkerTests
 
     private void ConfigureBakhooWithMocks()
 	{
-        _services.AddScoped<BakhooWorker>();
+        _services.AddScoped<BakhooVassal>();
         _services.AddTestLogging(_output);
 
-        _services.AddMockedScoped<IBakhooJobStateService>((provider, mock) =>
+        _services.AddMockedScoped<IBakhooJobRepository>((provider, mock) =>
         {
             mock.Setup(x => x.GetJobAsync(It.IsAny<Guid>(), ItIs.CT()))
                 .ReturnsAsync((Func<Guid, CancellationToken, BakhooJob>)(
@@ -89,7 +89,7 @@ public class BakhooWorkerTests
                         .First(y => y.Id == id)));
         });
 
-        _services.AddMockedScoped<IBakhooJobStateObserver>(mock => { });
+        _services.AddMockedScoped<IBakhooJobMonitor>(mock => { });
 
         _services.AddSingleton<JobHandlerTestLogger>();
         _services.AddTransient<IBakhooJobHandler, SampleJobHandlerA1>();
@@ -114,16 +114,16 @@ public class BakhooWorkerTests
         using var scope = provider.CreateScope();
         var cts = new CancellationTokenSource();
 
-		var worker = scope.ServiceProvider.GetRequiredService<BakhooWorker>();
+		var worker = scope.ServiceProvider.GetRequiredService<BakhooVassal>();
 		await worker.StartWorkerAsync(job1.Id, cts.Token);
 
-        var jobStateMock = scope.ServiceProvider.GetRequiredService<Mock<IBakhooJobStateService>>();
+        var jobStateMock = scope.ServiceProvider.GetRequiredService<Mock<IBakhooJobRepository>>();
         jobStateMock.Verify(x
             => x.StartJobAsync(
                 It.Is<Guid>(id => id == job1.Id), ItIs.CT()),
                 Times.Once);
 
-        var mockJobStateObserver = scope.ServiceProvider.GetRequiredService<Mock<IBakhooJobStateObserver>>();
+        var mockJobStateObserver = scope.ServiceProvider.GetRequiredService<Mock<IBakhooJobMonitor>>();
         mockJobStateObserver.Verify(x
             => x.NotifyIssueImportJobUpdatedAsync(
                 It.Is<Guid>(id => id == job1.Id), ItIs.CT()),
