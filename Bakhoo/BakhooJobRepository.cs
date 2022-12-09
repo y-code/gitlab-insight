@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 
 namespace Bakhoo;
 
-public interface IBakhooJobRepository
+internal interface IBakhooJobRepository
 {
     IAsyncEnumerable<BakhooJob> GetJobsAsync();
     IAsyncEnumerable<BakhooJob> GetJobsInBacklogAsync();
@@ -16,7 +16,7 @@ public interface IBakhooJobRepository
     Task StartJobAsync(Guid id, CancellationToken ct);
     Task CancelJobAsync(Guid id, CancellationToken ct);
     Task UpdateSuccessfulJobStateAsync(Guid id, CancellationToken ct);
-    Task UpdateCancelledJobStateAsync(Guid id, string message, CancellationToken ct);
+    Task UpdateCancelledJobAsync(Guid id, string message, CancellationToken ct);
     Task UpdateFailedJobStateAsync(Guid id, string message, CancellationToken ct);
 }
 
@@ -139,10 +139,10 @@ internal class BakhooJobStateService : IBakhooJobRepository
             throw new InvalidOperationException($"There is no job with ID {id}.");
 
         if (job.IsCancelled)
-            throw new InvalidOperationException($"Task {id} has already been canceled.");
+            throw new InvalidOperationException($"Job {id} has already been canceled.");
 
         if (job.HasError)
-            throw new InvalidOperationException($"Task {id} has had an error. So, cancellation is an invalid operation.");
+            throw new InvalidOperationException($"Job {id} has had an error. So, cancellation is an invalid operation.");
 
         job.IsCancelling = true;
         job.CancelRequested = DateTimeOffset.UtcNow;
@@ -168,7 +168,7 @@ internal class BakhooJobStateService : IBakhooJobRepository
         await _db.SaveChangesAsync(ct);
     }
 
-    public async Task UpdateCancelledJobStateAsync(Guid id, string message, CancellationToken ct)
+    public async Task UpdateCancelledJobAsync(Guid id, string message, CancellationToken ct)
     {
         var job = (await _db.Jobs
             .Where(x => x.Id == id)

@@ -15,18 +15,18 @@ namespace YouTrackInsight.Controllers;
 public class YouTrackController : ControllerBase
 {
     private readonly YouTrackClientService _client;
-    private readonly IBakhooJobRepository _jobManagementService;
+    private readonly IBakhooJobWindow _jobWindow;
     private readonly YTIssueImportService _issueImportService;
     private readonly YouTrackInsightHubClients _hubClients;
 
     public YouTrackController(
         YouTrackClientService client,
-        IBakhooJobRepository jobManagementService,
+        IBakhooJobWindow jobWindow,
         YTIssueImportService issueImportService,
         YouTrackInsightHubClients hubClients)
     {
         _client = client;
-        _jobManagementService = jobManagementService;
+        _jobWindow = jobWindow;
         _issueImportService = issueImportService;
         _hubClients = hubClients;
     }
@@ -40,7 +40,7 @@ public class YouTrackController : ControllerBase
 
     [HttpGet("issue-import")]
     public IAsyncEnumerable<BakhooJob> GetIssueImportTasks([FromQuery] IEnumerable<Guid> id)
-        => _jobManagementService.GetJobsAsync();
+        => _jobWindow.GetJobsAsync();
 
     public class SubmitIssueImportRequest
     {
@@ -52,7 +52,7 @@ public class YouTrackController : ControllerBase
     {
         try
         {
-            await _jobManagementService.SubmitJobAsync(request.Id, new IssueImportJob { }, ct);
+            await _jobWindow.SubmitJobAsync(request.Id, new IssueImportJob { }, ct);
         }
         catch (ArgumentException e)
         {
@@ -78,7 +78,7 @@ public class YouTrackController : ControllerBase
     {
         try
         {
-            await _jobManagementService.CancelJobAsync(request.Id, ct);
+            await _jobWindow.CancelJobAsync(request.Id, ct);
         }
         catch (ArgumentException e)
         {

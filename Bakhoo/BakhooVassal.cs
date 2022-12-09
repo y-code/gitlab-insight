@@ -33,7 +33,7 @@ internal class BakhooVassal : IBakhooWorker
 
     public Guid JobId { get; private set; }
     public Task? RunTask { get; private set; }
-    private CancellationTokenSource? _taskCts;
+    private CancellationTokenSource? _jobCts;
     public Task? CancelationTask { get; private set; }
 
     public BakhooVassal(
@@ -56,8 +56,8 @@ internal class BakhooVassal : IBakhooWorker
             await _importService.StartJobAsync(jobId, ct);
             await _observer.NotifyIssueImportJobUpdatedAsync(jobId, ct);
 
-            _taskCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-            RunTask = RunAsync(_taskCts.Token);
+            _jobCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            RunTask = RunAsync(_jobCts.Token);
         }
         catch (Exception e)
         {
@@ -104,13 +104,13 @@ internal class BakhooVassal : IBakhooWorker
             }
             if (data == null) throw new ArgumentException($"Failed parsing job data of job {JobId}.");
 
-            var handleTasks = new List<Task>();
+            var handlerTasks = new List<Task>();
             foreach (var (handler, _) in handlers)
             {
                 if (jobType == null) continue;
-                handleTasks.Add(HandleJob(data, handler, jobType, ct));
+                handlerTasks.Add(HandleJob(data, handler, jobType, ct));
             }
-            await Task.WhenAll(handleTasks.ToArray());
+            await Task.WhenAll(handlerTasks.ToArray());
         }
         catch (Exception e)
         {
@@ -130,10 +130,10 @@ internal class BakhooVassal : IBakhooWorker
         if (handle == null || handle.ReturnType != typeof(Task))
             throw new InvalidOperationException($"Something wrong in Bakhoo implementation.");
 
-        var handleTask = (Task?)handle.Invoke(handler, new object?[] { data, ct });
-        if (handleTask == null)
+        var handlerTask = (Task?)handle.Invoke(handler, new object?[] { data, ct });
+        if (handlerTask == null)
             throw new InvalidOperationException($"Something wrong in Bakhoo implementation.");
-        return handleTask;
+        return handlerTask;
     }
 
     private static string GetMethodName<T>(Expression<Action<T>> expression)
@@ -149,14 +149,14 @@ internal class BakhooVassal : IBakhooWorker
 
     public void Cancel()
     {
-        if (RunTask == null || _taskCts == null || CancelationTask != null) return;
+        if (RunTask == null || _jobCts == null || CancelationTask != null) return;
 
-        _taskCts.Cancel();
+        _jobCts.Cancel();
         var cancelCts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
-        CancelationTask = InnerCancelAsync(RunTask, _taskCts, cancelCts.Token);
+        CancelationTask = InnerCancelAsync(RunTask, _jobCts, cancelCts.Token);
     }
 
-    private async Task InnerCancelAsync(Task runTask, CancellationTokenSource taskCts, CancellationToken cancelCt)
+    private async Task InnerCancelAsync(Task runTask, CancellationTokenSource jobCts, CancellationToken cancelCt)
     {
         try
         {
@@ -166,8 +166,8 @@ internal class BakhooVassal : IBakhooWorker
 
                 if (isInTime)
                 {
-                    if (taskCts.IsCancellationRequested)
-                        await UpdateCancelledJobStateAsync(cancelCt);
+                    if (jobCts.IsCancellationRequested)
+                        await UpdateCancelledJobAsync(cancelCt);
                     else
                         await _importService.UpdateSuccessfulJobStateAsync(JobId, cancelCt);
                 }
@@ -176,7 +176,7 @@ internal class BakhooVassal : IBakhooWorker
             }
             catch (TaskCanceledException e)
             {
-                await UpdateCancelledJobStateAsync(cancelCt);
+                await UpdateCancelledJobAsync(cancelCt);
             }
             catch (AggregateException e)
             {
@@ -185,7 +185,7 @@ internal class BakhooVassal : IBakhooWorker
                 if (taskCanceledException == null)
                     await _importService.UpdateFailedJobStateAsync(JobId, e.Message, cancelCt);
 
-                await UpdateCancelledJobStateAsync(cancelCt);
+                await UpdateCancelledJobAsync(cancelCt);
             }
 
             await _observer.NotifyIssueImportJobUpdatedAsync(JobId, cancelCt);
@@ -196,6 +196,6 @@ internal class BakhooVassal : IBakhooWorker
         }
     }
 
-    private Task UpdateCancelledJobStateAsync(CancellationToken ct)
-        => _importService.UpdateCancelledJobStateAsync(JobId, "The task was canceled.", ct);
+    private Task UpdateCancelledJobAsync(CancellationToken ct)
+        => _importService.UpdateCancelledJobAsync(JobId, "The task was canceled.", ct);
 }

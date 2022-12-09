@@ -58,7 +58,7 @@ internal class BakhooLord : BackgroundService
                             )
                         ))
                     {
-                        _logger.LogDebug("Found that the worker for {TaskId} has completed. Disposing the worker context.", workerContext.Worker.JobId);
+                        _logger.LogDebug("Found that the worker for {JobId} has completed. Disposing the worker context.", workerContext.Worker.JobId);
 
                         workerContext.Scope.Dispose();
                         _workerContexts.Remove(workerContext);
@@ -98,7 +98,7 @@ internal class BakhooLord : BackgroundService
                     foreach (var job in cancellingJobs)
                     {
                         var observer = scope.ServiceProvider.GetRequiredService<IBakhooJobMonitor>();
-                        await importService.UpdateCancelledJobStateAsync(job.Id, "The task was canceled.", ct);
+                        await importService.UpdateCancelledJobAsync(job.Id, "The job was canceled.", ct);
                         await observer.NotifyIssueImportJobUpdatedAsync(job.Id, ct);
                     }
                 }
@@ -121,20 +121,20 @@ internal class BakhooLord : BackgroundService
                 _logger.LogDebug("Checking jobs to cancell...");
 
                 var importService = scope.ServiceProvider.GetRequiredService<IBakhooJobRepository>();
-                var tasks = importService.GetJobsInBacklogAsync();
+                var jobs = importService.GetJobsInBacklogAsync();
 
-                tasks = importService.GetJobsToCancelAsync();
+                jobs = importService.GetJobsToCancelAsync();
                 var jobCancellationCount = 0;
                 var startedJobCancellationCount = 0;
-                await foreach (var importTask in tasks)
+                await foreach (var job in jobs)
                 {
                     jobCancellationCount++;
 
-                    if (_workerContexts.Any(x => x.Worker.JobId == importTask.Id))
+                    if (_workerContexts.Any(x => x.Worker.JobId == job.Id))
                     {
                         startedJobCancellationCount++;
 
-                        var context = _workerContexts.First(x => x.Worker.JobId == importTask.Id);
+                        var context = _workerContexts.First(x => x.Worker.JobId == job.Id);
                         context.Worker.Cancel();
                     }
                 }

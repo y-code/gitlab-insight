@@ -17,17 +17,18 @@ public static class ServiceConfiguration
             config.GetSection(BakhooOptions.ConfigSectionName),
             optionsAction);
 
-    public static void AddBakhoo<TObserver>(
+    public static void AddBakhoo<TMonitor>(
         this IServiceCollection services,
         IConfigurationSection config,
         Action<DbContextOptionsBuilder> optionsAction)
-        where TObserver : class, IBakhooJobMonitor
+        where TMonitor : class, IBakhooJobMonitor
     {
         services.AddDbContext<BakhooDbContext>(optionsAction);
         services.Configure<BakhooOptions>(config);
         services.AddScoped<IBakhooJobRepository, BakhooJobStateService>();
         services.AddHostedService<BakhooLord>();
         services.AddScoped<IBakhooWorker, BakhooVassal>();
-        services.AddScoped<IBakhooJobMonitor, TObserver>();
+        services.AddScoped<IBakhooJobWindow, BakhooJobWindow>();
+        services.AddScoped<IBakhooJobMonitor, TMonitor>();
     }
 }
