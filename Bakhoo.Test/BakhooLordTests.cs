@@ -6,11 +6,11 @@ using Xunit.Abstractions;
 
 namespace Bakhoo.Test;
 
-public class BakhooJobManagerTests
+public class BakhooLordTests
 {
     private readonly ITestOutputHelper _output;
 
-    public BakhooJobManagerTests(ITestOutputHelper output)
+    public BakhooLordTests(ITestOutputHelper output)
     {
         _output = output;
     }
@@ -24,13 +24,18 @@ public class BakhooJobManagerTests
         services.AddMockedScoped<IBakhooJobRepository>((provider, mock) =>
         {
             var jobs = provider.GetRequiredService<List<BakhooJob>>();
-            mock.Setup(x => x.GetJobsInBacklogAsync())
-                .Returns(() => jobs
-                    .Where(x => x.Submitted.HasValue && !x.Start.HasValue)
-                    .ToAsyncEnumerable());
             mock.Setup(x => x.GetJobsToCancelAsync())
                 .Returns(jobs
                     .Where(x => x.IsCancelling)
+                    .ToAsyncEnumerable());
+        });
+        services.AddMockedScoped<IBakhooJobSequencer>((provider, mock) =>
+        {
+            var jobs = provider.GetRequiredService<List<BakhooJob>>();
+            mock.Setup(x => x.GetJobsInBacklogAsync())
+                .Returns(() => jobs
+                    .Where(x => x.Submitted.HasValue && !x.Start.HasValue)
+                    .Select(x => x.Id)
                     .ToAsyncEnumerable());
         });
         services.AddMockedScoped<IBakhooWorker>((provider, mock) =>
@@ -80,7 +85,7 @@ public class BakhooJobManagerTests
                 .Single(x => x.Id == jobId);
     }
 
-    private async Task<ServiceProvider> StartJobManager(
+    private async Task<ServiceProvider> StartLord(
         CancellationTokenSource cts,
         List<BakhooJob> fakeJobs,
         Func<IBakhooWorker, BakhooJob, CancellationTokenSource, Task> workerRun,
@@ -93,9 +98,9 @@ public class BakhooJobManagerTests
             workerRun: (worker, job) => workerRun(worker, job, cts));
         var provider = services.BuildServiceProvider();
 
-        var jobManager = provider.GetRequiredService<BakhooLord>();
+        var lord = provider.GetRequiredService<BakhooLord>();
 
-        await jobManager.StartAsync(cts.Token);
+        await lord.StartAsync(cts.Token);
 
         return provider;
     }
@@ -119,14 +124,14 @@ public class BakhooJobManagerTests
         await jobManager.StopAsync(stopCts.Token);
     }
 
-    private async Task<ServiceProvider> TestJobManager(
+    private async Task<ServiceProvider> TestLord(
         CancellationTokenSource cts,
         List<BakhooJob> fakeJobs,
         Func<IBakhooWorker, BakhooJob, CancellationTokenSource, Task> workerRun,
         Action keepAssertingUntilCancelled,
         bool isDebugging = false)
     {
-        var provider = await StartJobManager(cts, fakeJobs, workerRun, isDebugging);
+        var provider = await StartLord(cts, fakeJobs, workerRun, isDebugging);
         await AssertJobs(provider, keepAssertingUntilCancelled, isDebugging);
         await StopJobManager(provider);
         return provider;
@@ -145,7 +150,7 @@ public class BakhooJobManagerTests
         var cts = new CancellationTokenSource(
             TimeSpan.FromSeconds(isDebugging ? 1 * 24 * 60 * 60 : 5));
 
-        using var provider = await TestJobManager(
+        using var provider = await TestLord(
             cts,
             fakeJobs,
             workerRun: async (worker, job, cts) =>
@@ -181,7 +186,7 @@ public class BakhooJobManagerTests
         var cts = new CancellationTokenSource(
             TimeSpan.FromSeconds(isDebugging ? 1 * 24 * 60 * 60 : 5));
 
-        using var provider = await TestJobManager(
+        using var provider = await TestLord(
             cts,
             fakeJobs,
             workerRun: async (worker, job, cts) =>
@@ -217,7 +222,7 @@ public class BakhooJobManagerTests
         var cts = new CancellationTokenSource(
             TimeSpan.FromSeconds(isDebugging ? 1 * 24 * 60 * 60 : 5));
 
-        using var provider = await TestJobManager(
+        using var provider = await TestLord(
             cts,
             fakeJobs,
             workerRun: async (worker, job, cts) =>
@@ -256,7 +261,7 @@ public class BakhooJobManagerTests
         // start Job Manager
         // wait until job start
         // stop Job Manager
-        using var provider = await TestJobManager(
+        using var provider = await TestLord(
             cts,
             fakeJobs,
             workerRun: async (worker, job, cts) =>

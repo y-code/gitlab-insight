@@ -3,6 +3,7 @@ using Bakhoo.Entity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -26,6 +27,7 @@ public static class ServiceConfiguration
         services.AddDbContext<BakhooDbContext>(optionsAction);
         services.Configure<BakhooOptions>(config);
         services.AddScoped<IBakhooJobRepository, BakhooJobStateService>();
+        services.TryAddSingleton<IBakhooJobSequencer, BakhooJobSequencerSlim>();
         services.AddHostedService<BakhooLord>();
         services.AddScoped<IBakhooWorker, BakhooVassal>();
         services.AddScoped<IBakhooJobWindow, BakhooJobWindow>();

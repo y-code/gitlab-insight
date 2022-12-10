@@ -15,6 +15,7 @@ internal class BakhooLord : BackgroundService
 
     private readonly IServiceProvider _serviceProvider;
     private readonly BakhooOptions _options;
+    private readonly IBakhooJobSequencer _jobSequencer;
     private readonly ILogger _logger;
 
     private List<WorkerContext> _workerContexts = new();
@@ -23,10 +24,12 @@ internal class BakhooLord : BackgroundService
     public BakhooLord(
         IServiceProvider serviceProvider,
         IOptions<BakhooOptions> options,
+        IBakhooJobSequencer jobSequencer,
         ILogger<BakhooLord> logger)
     {
         _serviceProvider = serviceProvider;
         _options = options.Value;
+        _jobSequencer = jobSequencer;
         _logger = logger;
     }
 
@@ -68,17 +71,19 @@ internal class BakhooLord : BackgroundService
 
             if (_workerContexts.Count < _options.MaxParallelJobs)
             {
+                var jobIds = _jobSequencer.GetJobsInBacklogAsync();
+
                 using (var scope = _serviceProvider.CreateScope())
                 {
-                    var importService = scope.ServiceProvider.GetRequiredService<IBakhooJobRepository>();
-                    var importJobs = importService.GetJobsInBacklogAsync();
+                    var jobRepo = scope.ServiceProvider.GetRequiredService<IBakhooJobRepository>();
                     var cancellingJobs = new List<BakhooJob>();
 
-                    await foreach (var job in importJobs)
+                    await foreach (var jobId in jobIds)
                     {
                         if (ct.IsCancellationRequested)
                             break;
 
+                        var job = await jobRepo.GetJobAsync(jobId, ct);
                         if (job.IsCancelling)
                         {
                             cancellingJobs.Add(job);
@@ -97,9 +102,9 @@ internal class BakhooLord : BackgroundService
 
                     foreach (var job in cancellingJobs)
                     {
-                        var observer = scope.ServiceProvider.GetRequiredService<IBakhooJobMonitor>();
-                        await importService.UpdateCancelledJobAsync(job.Id, "The job was canceled.", ct);
-                        await observer.NotifyIssueImportJobUpdatedAsync(job.Id, ct);
+                        var monitor = scope.ServiceProvider.GetRequiredService<IBakhooJobMonitor>();
+                        await jobRepo.UpdateCancelledJobAsync(job.Id, "The job was canceled.", ct);
+                        await monitor.NotifyIssueImportJobUpdatedAsync(job.Id, ct);
                     }
                 }
             }
@@ -121,9 +126,8 @@ internal class BakhooLord : BackgroundService
                 _logger.LogDebug("Checking jobs to cancell...");
 
                 var importService = scope.ServiceProvider.GetRequiredService<IBakhooJobRepository>();
-                var jobs = importService.GetJobsInBacklogAsync();
 
-                jobs = importService.GetJobsToCancelAsync();
+                var jobs = importService.GetJobsToCancelAsync();
                 var jobCancellationCount = 0;
                 var startedJobCancellationCount = 0;
                 await foreach (var job in jobs)

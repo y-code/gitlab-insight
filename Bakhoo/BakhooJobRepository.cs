@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Bakhoo.Entity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace Bakhoo;
@@ -9,7 +10,6 @@ namespace Bakhoo;
 internal interface IBakhooJobRepository
 {
     IAsyncEnumerable<BakhooJob> GetJobsAsync();
-    IAsyncEnumerable<BakhooJob> GetJobsInBacklogAsync();
     IAsyncEnumerable<BakhooJob> GetJobsToCancelAsync();
     Task<BakhooJob> GetJobAsync(Guid id, CancellationToken ct);
     Task SubmitJobAsync<TData>(Guid id, TData jobData, CancellationToken ct);
@@ -55,14 +55,6 @@ internal class BakhooJobStateService : IBakhooJobRepository
             .AsAsyncEnumerable();
     }
 
-    public IQueryable<BakhooJob> JobsInBacklog
-        => _db.Jobs
-            .Where(x => !x.Start.HasValue)
-            .OrderBy(x => x.Submitted);
-
-    public IAsyncEnumerable<BakhooJob> GetJobsInBacklogAsync()
-        => JobsInBacklog.ToAsyncEnumerable();
-
     public IAsyncEnumerable<BakhooJob> GetJobsToCancelAsync()
         => _db.Jobs
             .Where(x => x.IsCancelling && !x.End.HasValue)
@@ -80,8 +72,12 @@ internal class BakhooJobStateService : IBakhooJobRepository
         if (id == default)
             throw new ArgumentException($"A UUID is required for parameter `id` is required.", nameof(id));
 
-        var existingIds = await JobsInBacklog.Select(x => x.Id)
-            .ToAsyncEnumerable().ToArrayAsync(ct);
+        var existingIds = await _db.Jobs
+            .Where(x => !x.Start.HasValue)
+            .OrderBy(x => x.Submitted)
+            .Select(x => x.Id)
+            .ToAsyncEnumerable()
+            .ToArrayAsync(ct);
 
         if (existingIds.Contains(id)) return;
 
