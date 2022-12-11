@@ -60,6 +60,7 @@ class SampleJobHandlerB : SampleJobHandler<SampleJobB, SampleJobHandlerB>
     public SampleJobHandlerB(JobHandlerTestLogger logger) : base(logger) { }
 }
 
+[Collection("BakhooTest")]
 public class BakhooWorkerTests
 {
     private readonly ITestOutputHelper _output;
@@ -115,7 +116,7 @@ public class BakhooWorkerTests
         var cts = new CancellationTokenSource();
 
 		var worker = scope.ServiceProvider.GetRequiredService<BakhooVassal>();
-		await worker.StartWorkerAsync(job1.Id, cts.Token);
+		await worker.StartAsync(job1.Id, cts.Token);
 
         var jobStateMock = scope.ServiceProvider.GetRequiredService<Mock<IBakhooJobRepository>>();
         jobStateMock.Verify(x

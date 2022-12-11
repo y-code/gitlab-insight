@@ -15,16 +15,16 @@ public interface IBakhooJobHandler<TJobType> : IBakhooJobHandler
     Task Handle(TJobType job, CancellationToken ct);
 }
 
-internal interface IBakhooWorker
+internal interface IBakhooVassal
 {
     Guid JobId { get; }
     Task? RunTask { get; }
     Task? CancelationTask { get; }
-    Task StartWorkerAsync(Guid jobId, CancellationToken ct);
+    Task StartAsync(Guid jobId, CancellationToken ct);
     void Cancel();
 }
 
-internal class BakhooVassal : IBakhooWorker
+internal class BakhooVassal : IBakhooVassal
 {
     private readonly IBakhooJobRepository _importService;
     private readonly IBakhooJobMonitor _observer;
@@ -48,7 +48,7 @@ internal class BakhooVassal : IBakhooWorker
         _logger = logger;
     }
 
-    public async Task StartWorkerAsync(Guid jobId, CancellationToken ct)
+    public async Task StartAsync(Guid jobId, CancellationToken ct)
     {
         JobId = jobId;
         try

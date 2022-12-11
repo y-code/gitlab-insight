@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Bakhoo.Test;
 
+[Collection("BakhooTest")]
 public class BakhooServiceTests : IDisposable
 {
 	private class JobInfo { }

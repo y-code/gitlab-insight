@@ -6,6 +6,7 @@ using Xunit.Abstractions;
 
 namespace Bakhoo.Test;
 
+[Collection("BakhooTest")]
 public class BakhooLordTests
 {
     private readonly ITestOutputHelper _output;
@@ -17,17 +18,14 @@ public class BakhooLordTests
 
     private IServiceCollection ConfigureBakhooWithMocks(
         IServiceCollection services,
-        Func<IBakhooWorker, BakhooJob, Task> workerRun)
+        Func<IBakhooVassal, BakhooJob, CancellationToken, Task> vassalRun)
     {
         services.AddTestLogging(_output);
         services.AddSingleton<BakhooLord>();
-        services.AddMockedScoped<IBakhooJobRepository>((provider, mock) =>
+        services.AddMockedScoped<IBakhooJobMonitor>((provider, mock) =>
         {
-            var jobs = provider.GetRequiredService<List<BakhooJob>>();
-            mock.Setup(x => x.GetJobsToCancelAsync())
-                .Returns(jobs
-                    .Where(x => x.IsCancelling)
-                    .ToAsyncEnumerable());
+            mock.Setup(x => x.NotifyIssueImportJobUpdatedAsync(It.IsAny<Guid>(), ItIs.CT()))
+                .Returns(Task.CompletedTask);
         });
         services.AddMockedScoped<IBakhooJobSequencer>((provider, mock) =>
         {
@@ -38,17 +36,42 @@ public class BakhooLordTests
                     .Select(x => x.Id)
                     .ToAsyncEnumerable());
         });
-        services.AddMockedScoped<IBakhooWorker>((provider, mock) =>
+        services.AddMockedScoped<IBakhooJobRepository>((provider, mock) =>
+        {
+            var jobs = provider.GetRequiredService<List<BakhooJob>>();
+            mock.Setup(x => x.GetJobsToCancelAsync())
+                .Returns(() => jobs
+                    .Where(x => x.IsCancelling)
+                    .ToAsyncEnumerable());
+            mock.Setup(x => x.GetJobAsync(It.IsAny<Guid>(), ItIs.CT()))
+                .Returns<Guid, CancellationToken>((jobId, ct) => Task.FromResult(
+                    jobs.Single(x => x.Id == jobId)));
+            mock.Setup(x => x.UpdateCancelledJobAsync(It.IsAny<Guid>(), It.IsAny<string>(), ItIs.CT()))
+                .Returns<Guid, string, CancellationToken>((jobId, message, ct) =>
+                {
+                    var job = jobs.Single(x => x.Id == jobId);
+                    job.IsCancelled = true;
+                    job.IsCancelling = false;
+                    job.Start ??= DateTimeOffset.UtcNow;
+                    job.End = DateTimeOffset.UtcNow;
+                    return Task.CompletedTask;
+                });
+        });
+        services.AddMockedScoped<IBakhooVassal>((provider, mock) =>
         {
             BakhooJob? job = null;
             Task? runTask = null;
             Task? cancelTask = null;
-            mock.Setup(x => x.StartWorkerAsync(It.IsAny<Guid>(), ItIs.CT()))
+            mock.Setup(x => x.StartAsync(It.IsAny<Guid>(), ItIs.CT()))
                 .Callback<Guid, CancellationToken>((jobId, ct) =>
                 {
                     job = getJobBy(provider, jobId);
                     job.Start = DateTimeOffset.UtcNow;
-                    runTask = workerRun(mock.Object, job);
+                    if (job.IsCancelled) return;
+                    runTask = Task.Run(async () =>
+                    {
+                        await vassalRun(mock.Object, job, ct);
+                    });
                 });
             mock.SetupGet(x => x.JobId).Returns(() =>
             {
@@ -86,21 +109,20 @@ public class BakhooLordTests
     }
 
     private async Task<ServiceProvider> StartLord(
-        CancellationTokenSource cts,
         List<BakhooJob> fakeJobs,
-        Func<IBakhooWorker, BakhooJob, CancellationTokenSource, Task> workerRun,
+        Func<IBakhooVassal, BakhooJob, CancellationToken, Task> vassalRun,
         bool isDebugging = false)
     {
         ServiceCollection services = new();
         services.AddSingleton<List<BakhooJob>>(fakeJobs);
         ConfigureBakhooWithMocks(
             services,
-            workerRun: (worker, job) => workerRun(worker, job, cts));
+            vassalRun: (vassal, job, ct) => vassalRun(vassal, job, ct));
         var provider = services.BuildServiceProvider();
 
         var lord = provider.GetRequiredService<BakhooLord>();
 
-        await lord.StartAsync(cts.Token);
+        await lord.StartAsync(new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token);
 
         return provider;
     }
@@ -125,13 +147,12 @@ public class BakhooLordTests
     }
 
     private async Task<ServiceProvider> TestLord(
-        CancellationTokenSource cts,
         List<BakhooJob> fakeJobs,
-        Func<IBakhooWorker, BakhooJob, CancellationTokenSource, Task> workerRun,
+        Func<IBakhooVassal, BakhooJob, CancellationToken, Task> vassalRun,
         Action keepAssertingUntilCancelled,
         bool isDebugging = false)
     {
-        var provider = await StartLord(cts, fakeJobs, workerRun, isDebugging);
+        var provider = await StartLord(fakeJobs, vassalRun, isDebugging);
         await AssertJobs(provider, keepAssertingUntilCancelled, isDebugging);
         await StopJobManager(provider);
         return provider;
@@ -147,13 +168,9 @@ public class BakhooLordTests
             new BakhooJob { Id = Guid.NewGuid(), Submitted = DateTimeOffset.UtcNow },
         };
 
-        var cts = new CancellationTokenSource(
-            TimeSpan.FromSeconds(isDebugging ? 1 * 24 * 60 * 60 : 5));
-
         using var provider = await TestLord(
-            cts,
             fakeJobs,
-            workerRun: async (worker, job, cts) =>
+            vassalRun: async (worker, job, ct) =>
             {
                 job.End = DateTimeOffset.UtcNow;
             },
@@ -170,7 +187,8 @@ public class BakhooLordTests
                         Assert.False(job.IsCancelled);
                     },
                 });
-            });
+            },
+            isDebugging);
     }
 
     [Fact]
@@ -183,15 +201,12 @@ public class BakhooLordTests
             new BakhooJob { Id = Guid.NewGuid(), Submitted = DateTimeOffset.UtcNow, IsCancelling = true },
         };
 
-        var cts = new CancellationTokenSource(
-            TimeSpan.FromSeconds(isDebugging ? 1 * 24 * 60 * 60 : 5));
-
         using var provider = await TestLord(
-            cts,
             fakeJobs,
-            workerRun: async (worker, job, cts) =>
+            vassalRun: async (worker, job, ct) =>
             {
                 //job.End = DateTimeOffset.UtcNow;
+                Assert.Fail("worker should not be started because the job has been being cancelled.");
             },
             keepAssertingUntilCancelled: () =>
             {
@@ -206,7 +221,8 @@ public class BakhooLordTests
                         Assert.True(job.IsCancelled);
                     },
                 });
-            });
+            },
+            isDebugging);
     }
 
     [Fact]
@@ -219,15 +235,11 @@ public class BakhooLordTests
             new BakhooJob { Id = Guid.NewGuid(), Submitted = DateTimeOffset.UtcNow },
         };
 
-        var cts = new CancellationTokenSource(
-            TimeSpan.FromSeconds(isDebugging ? 1 * 24 * 60 * 60 : 5));
-
         using var provider = await TestLord(
-            cts,
             fakeJobs,
-            workerRun: async (worker, job, cts) =>
+            vassalRun: async (vassal, job, ct) =>
             {
-                worker.Cancel(); // call faked cancellation that updates the job state
+                vassal.Cancel(); // call faked cancellation that updates the job state
             },
             keepAssertingUntilCancelled: () =>
             {
@@ -255,18 +267,16 @@ public class BakhooLordTests
             new BakhooJob { Id = Guid.NewGuid(), Submitted = DateTimeOffset.UtcNow },
         };
 
-        var cts = new CancellationTokenSource(
-            TimeSpan.FromSeconds(isDebugging ? 1 * 24 * 60 * 60 : 5));
-
         // start Job Manager
         // wait until job start
         // stop Job Manager
         using var provider = await TestLord(
-            cts,
             fakeJobs,
-            workerRun: async (worker, job, cts) =>
+            vassalRun: async (worker, job, ct) =>
             {
-                while (!cts.IsCancellationRequested)
+                // run until cancelled
+                // and finishes without throwing exception
+                while (!ct.IsCancellationRequested)
                 {
                     await Task.Delay(TimeSpan.FromSeconds(1));
                 }

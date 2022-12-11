@@ -9,16 +9,16 @@ namespace Bakhoo;
 
 internal class BakhooLord : BackgroundService
 {
-    private record WorkerContext(
+    private record VassalContext(
         IServiceScope Scope,
-        IBakhooWorker Worker);
+        IBakhooVassal Vassal);
 
     private readonly IServiceProvider _serviceProvider;
     private readonly BakhooOptions _options;
     private readonly IBakhooJobSequencer _jobSequencer;
     private readonly ILogger _logger;
 
-    private List<WorkerContext> _workerContexts = new();
+    private List<VassalContext> _vassalContexts = new();
     private bool _isStopping = false;
 
     public BakhooLord(
@@ -35,41 +35,41 @@ internal class BakhooLord : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
-        ThreadPool.GetMaxThreads(out var maxWorkerThreads, out var maxCompletionPortThreads);
-        _logger.LogInformation("Max Worker Threads: {MaxWorkerThreads}", maxWorkerThreads);
+        ThreadPool.GetMaxThreads(out var maxVassalThreads, out var maxCompletionPortThreads);
+        _logger.LogInformation("Max Vassal Threads: {MaxVassalThreads}", maxVassalThreads);
         _logger.LogInformation("Max Completion Port Threads: {MaxCompletionPortThreads}", maxCompletionPortThreads);
 
-        while (!ct.IsCancellationRequested || _workerContexts.Count > 0)
+        while (!ct.IsCancellationRequested || _vassalContexts.Count > 0)
         {
             await Task.Delay(TimeSpan.FromSeconds(2));
 
             _logger.LogDebug("Starting another cycle...");
-            _logger.LogInformation("Worker Count: {WorkerCount}", _workerContexts.Count());
+            _logger.LogInformation("Vassal Count: {VassalCount}", _vassalContexts.Count());
 
-            lock (_workerContexts)
+            lock (_vassalContexts)
             {
-                _logger.LogDebug("Checking that any workers have completed...");
+                _logger.LogDebug("Checking that any vassals have completed...");
 
-                foreach (var workerContext in _workerContexts.ToArray())
+                foreach (var vassalContext in _vassalContexts.ToArray())
                 {
-                    if (workerContext.Worker.RunTask == null
+                    if (vassalContext.Vassal.RunTask == null
                         || (
-                            workerContext.Worker.RunTask.IsCompleted
+                            vassalContext.Vassal.RunTask.IsCompleted
                             && (
-                                workerContext.Worker.CancelationTask == null
-                                || workerContext.Worker.CancelationTask.IsCompleted
+                                vassalContext.Vassal.CancelationTask == null
+                                || vassalContext.Vassal.CancelationTask.IsCompleted
                             )
                         ))
                     {
-                        _logger.LogDebug("Found that the worker for {JobId} has completed. Disposing the worker context.", workerContext.Worker.JobId);
+                        _logger.LogDebug("Found that the vassal for {JobId} has completed. Disposing the vassal context.", vassalContext.Vassal.JobId);
 
-                        workerContext.Scope.Dispose();
-                        _workerContexts.Remove(workerContext);
+                        vassalContext.Scope.Dispose();
+                        _vassalContexts.Remove(vassalContext);
                     }
                 }
             }
 
-            if (_workerContexts.Count < _options.MaxParallelJobs)
+            if (_vassalContexts.Count < _options.MaxParallelJobs && !_isStopping)
             {
                 var jobIds = _jobSequencer.GetJobsInBacklogAsync();
 
@@ -90,14 +90,14 @@ internal class BakhooLord : BackgroundService
                             continue;
                         }
 
-                        if (_workerContexts.Count >= _options.MaxParallelJobs)
+                        if (_vassalContexts.Count >= _options.MaxParallelJobs)
                             break;
 
-                        var workerScope = _serviceProvider.CreateScope();
-                        var worker = workerScope.ServiceProvider.GetRequiredService<IBakhooWorker>();
-                        await worker.StartWorkerAsync(job.Id, ct);
+                        var vassalScope = _serviceProvider.CreateScope();
+                        var vassal = vassalScope.ServiceProvider.GetRequiredService<IBakhooVassal>();
+                        await vassal.StartAsync(job.Id, ct);
 
-                        _workerContexts.Add(new WorkerContext(workerScope, worker));
+                        _vassalContexts.Add(new VassalContext(vassalScope, vassal));
                     }
 
                     foreach (var job in cancellingJobs)
@@ -115,9 +115,9 @@ internal class BakhooLord : BackgroundService
 
                 _logger.LogInformation("Job manager is requested to stop, and stopping...");
 
-                foreach (var workerContext in _workerContexts)
+                foreach (var vassalContext in _vassalContexts)
                 {
-                    workerContext.Worker.Cancel();
+                    vassalContext.Vassal.Cancel();
                 }
             }
 
@@ -134,12 +134,12 @@ internal class BakhooLord : BackgroundService
                 {
                     jobCancellationCount++;
 
-                    if (_workerContexts.Any(x => x.Worker.JobId == job.Id))
+                    if (_vassalContexts.Any(x => x.Vassal.JobId == job.Id))
                     {
                         startedJobCancellationCount++;
 
-                        var context = _workerContexts.First(x => x.Worker.JobId == job.Id);
-                        context.Worker.Cancel();
+                        var context = _vassalContexts.First(x => x.Vassal.JobId == job.Id);
+                        context.Vassal.Cancel();
                     }
                 }
 

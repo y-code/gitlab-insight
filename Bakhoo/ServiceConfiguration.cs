@@ -29,7 +29,7 @@ public static class ServiceConfiguration
         services.AddScoped<IBakhooJobRepository, BakhooJobStateService>();
         services.TryAddSingleton<IBakhooJobSequencer, BakhooJobSequencerSlim>();
         services.AddHostedService<BakhooLord>();
-        services.AddScoped<IBakhooWorker, BakhooVassal>();
+        services.AddScoped<IBakhooVassal, BakhooVassal>();
         services.AddScoped<IBakhooJobWindow, BakhooJobWindow>();
         services.AddScoped<IBakhooJobMonitor, TMonitor>();
     }
