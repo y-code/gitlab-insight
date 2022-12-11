@@ -33,7 +33,8 @@ builder.Services.AddBakhoo<YouTrackInsightHubClients>(
 
 builder.Services.Configure<YouTrackInsightOptions>(
     builder.Configuration.GetSection(YouTrackInsightOptions.ConfigSectionName));
-builder.Services.AddSingleton<YouTrackClientService>();
+builder.Services.AddSingleton<IYouTrackClientService, YouTrackClientService>();
+builder.Services.AddScoped<YTIssueService>();
 builder.Services.AddScoped<YTIssueImportService>();
 builder.Services.AddScoped<YouTrackInsightHubClients>();
 builder.Services.AddScoped<IBakhooJobHandler>(provider

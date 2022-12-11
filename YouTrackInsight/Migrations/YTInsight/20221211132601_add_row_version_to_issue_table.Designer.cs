@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using YouTrackInsight.Entity;
@@ -11,9 +12,11 @@ using YouTrackInsight.Entity;
 namespace YouTrackInsight.Migrations.YTInsight
 {
     [DbContext(typeof(YTInsightDbContext))]
-    partial class YTInsightDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221211132601_add_row_version_to_issue_table")]
+    partial class addrowversiontoissuetable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

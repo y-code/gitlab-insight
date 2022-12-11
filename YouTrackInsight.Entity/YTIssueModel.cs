@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +18,8 @@ public class YTIssueModel
     public string? Summary { get; set; }
     public ICollection<YTIssueLinkModel> Links { get; set; }
         = new Collection<YTIssueLinkModel>();
+    [Timestamp]
+    public byte[] Version { get; set; }
     [NotMapped]
     public string? TopId { get; set; }
     [NotMapped]

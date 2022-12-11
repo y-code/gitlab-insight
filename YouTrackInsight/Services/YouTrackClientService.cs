@@ -8,7 +8,13 @@ using YouTrackSharp.Projects;
 
 namespace YouTrackInsight.Services;
 
-public class YouTrackClientService
+public interface IYouTrackClientService
+{
+    IAsyncEnumerable<YTIssueModel> GetIssuesAsync(YTSearchOptions options);
+    Task<YTIssueNetworkModel> GetIssueNetwork(YTSearchOptions options);
+}
+
+public class YouTrackClientService : IYouTrackClientService
 {
     private readonly ILogger _logger;
     private readonly IOptionsMonitor<YouTrackInsightOptions> _options;
@@ -78,7 +84,7 @@ public class YouTrackClientService
         }
     }
 
-    public async IAsyncEnumerable<YTIssueModel> GetIssuesAsync(SearchOptions options)
+    public async IAsyncEnumerable<YTIssueModel> GetIssuesAsync(YTSearchOptions options)
     {
         var projects = await GetAccessibleProjects();
         options.Projects = projects.Select(x => x.ShortName).Intersect(options.Projects).ToArray();
@@ -119,7 +125,7 @@ public class YouTrackClientService
         "Depend",
     };
 
-    public async Task<YTIssueNetworkModel> GetIssueNetwork(SearchOptions options)
+    public async Task<YTIssueNetworkModel> GetIssueNetwork(YTSearchOptions options)
     {
         var network = new YTIssueNetworkModel
         {

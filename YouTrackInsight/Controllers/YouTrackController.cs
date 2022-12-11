@@ -14,27 +14,27 @@ namespace YouTrackInsight.Controllers;
 [Route("api/[controller]")]
 public class YouTrackController : ControllerBase
 {
-    private readonly YouTrackClientService _client;
     private readonly IBakhooJobWindow _jobWindow;
+    private readonly YTIssueService _issueService;
     private readonly YTIssueImportService _issueImportService;
     private readonly YouTrackInsightHubClients _hubClients;
 
     public YouTrackController(
-        YouTrackClientService client,
+        YTIssueService issueService,
         IBakhooJobWindow jobWindow,
         YTIssueImportService issueImportService,
         YouTrackInsightHubClients hubClients)
     {
-        _client = client;
+        _issueService = issueService;
         _jobWindow = jobWindow;
         _issueImportService = issueImportService;
         _hubClients = hubClients;
     }
 
     [HttpGet("issue-network")]
-    public async Task<YTIssueNetworkModel> GetIssueNetwork([FromQuery] SearchOptions options)
+    public async Task<YTIssueNetworkModel> GetIssueNetwork([FromQuery] YTSearchOptions options)
     {
-        var issues = await _client.GetIssueNetwork(options);
+        var issues = await _issueService.GetIssueNetwork(options);
         return issues;
     }
 
@@ -52,7 +52,7 @@ public class YouTrackController : ControllerBase
     {
         try
         {
-            await _jobWindow.SubmitJobAsync(request.Id, new IssueImportJob { }, ct);
+            await _jobWindow.SubmitJobAsync(request.Id, new YTIssueImportJob { }, ct);
         }
         catch (ArgumentException e)
         {

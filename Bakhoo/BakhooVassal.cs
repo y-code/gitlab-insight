@@ -12,7 +12,7 @@ public interface IBakhooJobHandler { }
 
 public interface IBakhooJobHandler<TJobType> : IBakhooJobHandler
 {
-    Task Handle(TJobType job, CancellationToken ct);
+    Task Handle(Guid jobId, TJobType job, CancellationToken ct);
 }
 
 internal interface IBakhooVassal
@@ -126,11 +126,11 @@ internal class BakhooVassal : IBakhooVassal
     private Task HandleJob(object data, IBakhooJobHandler handler, Type jobType, CancellationToken ct)
     {
         var handle = typeof(IBakhooJobHandler<>).MakeGenericType(jobType)
-            .GetMethod(GetMethodName<IBakhooJobHandler<object>>(x => x.Handle(ItIsAnyObject(), ItIsCT())));
+            .GetMethod(GetMethodName<IBakhooJobHandler<object>>(x => x.Handle(ItIsAnyGuid(), ItIsAnyObject(), ItIsCT())));
         if (handle == null || handle.ReturnType != typeof(Task))
             throw new InvalidOperationException($"Something wrong in Bakhoo implementation.");
 
-        var handlerTask = (Task?)handle.Invoke(handler, new object?[] { data, ct });
+        var handlerTask = (Task?)handle.Invoke(handler, new object?[] { JobId, data, ct });
         if (handlerTask == null)
             throw new InvalidOperationException($"Something wrong in Bakhoo implementation.");
         return handlerTask;
@@ -139,12 +139,13 @@ internal class BakhooVassal : IBakhooVassal
     private static string GetMethodName<T>(Expression<Action<T>> expression)
         => ((MethodCallExpression)expression.Body).Method.Name;
 
+    private static Guid ItIsAnyGuid() => Guid.Empty;
     private static object ItIsAnyObject() => new object();
     private static CancellationToken ItIsCT() => new CancellationTokenSource().Token;
 
     private class ExampleJobHandler : IBakhooJobHandler<object>
     {
-        public Task Handle(object job, CancellationToken ct) => Task.CompletedTask;
+        public Task Handle(Guid jobId, object job, CancellationToken ct) => Task.CompletedTask;
     }
 
     public void Cancel()

@@ -37,7 +37,7 @@ abstract class SampleJobHandler<TJob, TImpl> : IBakhooJobHandler<TJob>
 {
     private readonly JobHandlerTestLogger _logger;
     public SampleJobHandler(JobHandlerTestLogger logger) => _logger = logger;
-    public async Task Handle(TJob job, CancellationToken ct)
+    public async Task Handle(Guid jobId, TJob job, CancellationToken ct)
     {
         _logger.Log<TImpl>(job, JobHandlerStep.Starting);
         await Task.Delay(TimeSpan.FromSeconds(1), ct);

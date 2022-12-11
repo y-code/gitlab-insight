@@ -5,7 +5,7 @@ using YouTrackInsight.Entity;
 
 namespace YouTrackInsight.Domain;
 
-public class SearchOptions
+public class YTSearchOptions
 {
     [BindProperty(Name = "project")]
     [JsonPropertyName("project")]
@@ -14,7 +14,7 @@ public class SearchOptions
 
 public class YTIssueNetworkModel
 {
-    public SearchOptions Options { get; set; } = new();
+    public YTSearchOptions Options { get; set; } = new();
     public IEnumerable<YTIssueModel> Issues { get; set; } = Enumerable.Empty<YTIssueModel>();
     public IEnumerable<YTIssueLinkModel> Links { get; set; } = Enumerable.Empty<YTIssueLinkModel>();
 }
