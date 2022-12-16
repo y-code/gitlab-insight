@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
-import { Store } from '@ngrx/store';
+import { createSelector, Store } from '@ngrx/store';
 import { Subscription, tap } from 'rxjs';
 import { Network, Node, Edge, Options } from 'vis-network';
 import { DataSet } from 'vis-data';
@@ -29,9 +29,9 @@ export class IssueNetworkMapComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.subscription = this.store.select(selectIssueNetworkStoreState).pipe(
-      tap(state => {
-        this.data = state.issueNetwork?.data ?? { options: { project: [] }, issues: [], links: [] };
+    this.subscription = this.store.select(createSelector(selectIssueNetworkStoreState, x => x.issueNetwork)).pipe(
+      tap(issueNetwork => {
+        this.data = issueNetwork?.data ?? { options: { project: [] }, issues: [], links: [] };
 
         if (this.issueNetwork?.nativeElement) {
           const nodes = new DataSet<Node>(
